@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"github.com/GDSC-UIT/sowaste-backend/go/internal/config"
+	"github.com/GDSC-UIT/sowaste-backend/go/internal/database"
+)
+
+func init() {
+	config.LoadEnv()
+}
 
 func main() {
-	fmt.Println("Hello world")
+	config.GetDBConfig()
+	database.Client.ConnectDb()
 }
