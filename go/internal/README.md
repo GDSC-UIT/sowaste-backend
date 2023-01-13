@@ -31,11 +31,7 @@ As the name implies, this layer contains the business logic that supports the ap
 
 This layer is responsible for interacting with permanent vaults, such as databases, and other non-business-related information processing. For instance, reading and writing in the database.
 
-### **/internal directories:**
-
-#### `/app`
-
-The point where all our dependencies and logic are collected and run the app. The run method that is called from `/cmd`.
+## **/internal directories:**
 
 #### `/config`
 
