@@ -37,6 +37,9 @@ func (gr *GinRouter) RoutersEstablishment() {
 		! Similar flow for other services
 	*/
 	routes.DictonaryRoutes(apiRouter, database.Client.Source)
+	routes.LessonRoutes(apiRouter, database.Client.Source)
+	routes.QuizRoutes(apiRouter, database.Client.Source)
+	routes.QuestionRoutes(apiRouter, database.Client.Source)
 }
 
 func (gr *GinRouter) Run() {

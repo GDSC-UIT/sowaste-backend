@@ -9,8 +9,8 @@ type Location struct {
 }
 
 type BottleShop struct {
-	ID       primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
 	Location Location           `bson:"location" json:"location"`
-	Status   string             `bson:"status,omitempty" json:"status,omitempty"`
-	Point    int64              `bson:"point,omitempty" json:"point,omitempty"`
+	Status   string             `bson:"status" json:"status"`
+	Point    int64              `bson:"point" json:"point"`
 }

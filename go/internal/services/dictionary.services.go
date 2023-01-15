@@ -18,7 +18,7 @@ type DictionaryServices struct {
 
 const dictionaryDbCollectionName = "dictionaries"
 
-func getDictionaryCollection(ds *DictionaryServices) *mongo.Collection {
+func GetDictionaryCollection(ds *DictionaryServices) *mongo.Collection {
 	return utils.GetDatabaseCollection(dictionaryDbCollectionName, ds.Db)
 }
 
@@ -26,22 +26,43 @@ func (ds *DictionaryServices) GetDictionaries(c *gin.Context) {
 	ctx := c.Request.Context()
 	var dictionaries []model.Dictionary
 
-	//** utils.GetDatabaseCollection **//
-	//* called from collection.utils.go **//
 	/*
-	* @params dictionaryDbCollectionName; type string;
-	* @params ds.Db; type *mongo.Client
-	* @return => *mongo.Client
-	 */
-	cursor, err := getDictionaryCollection(ds).Find(context.TODO(), bson.M{})
+		! Example of the result of the aggregation
+		TODO https://vidler.app/blog/data/populate-golang-relationship-field-using-mongodb-aggregate-and-lookup/
+	*/
+	var lookupLesson = bson.M{"$lookup": bson.M{
+		"from":         "lessons",       //** collection name **//
+		"localField":   "_id",           //** field in the input documents **//
+		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
+		"as":           "lessons",       //** output array field **//
+	}}
+	var lookupQuizzes = bson.M{"$lookup": bson.M{
+		"from":         "quizzes",       //** collection name **//
+		"localField":   "_id",           //** field in the input documents **//
+		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
+		"as":           "quizzes",       //** output array field **//
+	}}
+	var projectQuizzes = bson.M{"$project": bson.M{
+		"quizzes": bson.M{
+			"questions": 0,
+		},
+	}}
+
+	cursor, err := GetDictionaryCollection(ds).Aggregate(context.TODO(), []bson.M{
+		lookupLesson,
+		lookupQuizzes,
+		projectQuizzes,
+	})
 
 	if err != nil {
 		panic(err)
 	}
 
 	if err = cursor.All(ctx, &dictionaries); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
 	}
+
 	responseMessage := "Successfully get all dictionaries"
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(dictionaries, responseMessage))
 }
@@ -53,17 +74,17 @@ func (ds *DictionaryServices) GetADictionary(c *gin.Context) {
 	//** Convert id to mongodb object id **//
 	id, err := primitive.ObjectIDFromHex(param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, nil)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	filter := bson.M{"_id": id}
 
 	var dictionary model.Dictionary
-	err = getDictionaryCollection(ds).FindOne(ctx, filter).Decode(&dictionary)
+	err = GetDictionaryCollection(ds).FindOne(ctx, filter).Decode(&dictionary)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, nil)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -78,14 +99,18 @@ func (ds *DictionaryServices) CreateADictionary(c *gin.Context) {
 	if err := c.ShouldBindJSON(&dictionary); err != nil {
 		return
 	}
-	_, err := getDictionaryCollection(ds).InsertOne(ctx, dictionary)
+	dictionary.ID = primitive.NewObjectID()
+	dictionary.Lessons = []model.Lesson{}
+	dictionary.Quizzes = []model.Quiz{}
+
+	result, err := GetDictionaryCollection(ds).InsertOne(ctx, dictionary)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	responseMessage := "Successfully created a dictionary"
-	c.JSON(http.StatusCreated, utils.SuccessfulResponse(dictionary, responseMessage))
+	c.JSON(http.StatusCreated, utils.SuccessfulResponse(result, responseMessage))
 }
 
 func (ds *DictionaryServices) UpdateADictionary(c *gin.Context) {
@@ -106,14 +131,14 @@ func (ds *DictionaryServices) UpdateADictionary(c *gin.Context) {
 
 	update := bson.M{"$set": dictionary}
 
-	_, err = getDictionaryCollection(ds).UpdateOne(ctx, filter, update)
+	result, err := GetDictionaryCollection(ds).UpdateOne(ctx, filter, update)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	responseMessage := "Successfully updated the dictionary with id " + param
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(dictionary, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
 }
 
 func (ds *DictionaryServices) DeleteADictionary(c *gin.Context) {
@@ -127,7 +152,7 @@ func (ds *DictionaryServices) DeleteADictionary(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	_, err = getDictionaryCollection(ds).DeleteOne(ctx, filter)
+	_, err = GetDictionaryCollection(ds).DeleteOne(ctx, filter)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
