@@ -106,7 +106,7 @@ func (ls *LessonServices) CreateALesson(c *gin.Context) {
 	}
 	filter := bson.M{"_id": lesson.DictionaryID}
 
-	updateDictionary, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, ls.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"lessons": lesson.DictionaryID}})
+	updateDictionary, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, ls.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"lessons": lesson.ID}})
 	if err != nil {
 		fmt.Println(err)
 	}

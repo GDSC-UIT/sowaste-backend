@@ -105,7 +105,7 @@ func (qs *QuizServices) CreateAQuiz(c *gin.Context) {
 
 	filter := bson.M{"_id": quiz.DictionaryID}
 
-	updateDictionary, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"quizzes": quiz.DictionaryID}})
+	updateDictionary, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"quizzes": quiz.ID}})
 	if err != nil {
 		fmt.Println(err)
 	}

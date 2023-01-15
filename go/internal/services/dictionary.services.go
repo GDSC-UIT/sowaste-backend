@@ -125,6 +125,13 @@ func (ds *DictionaryServices) UpdateADictionary(c *gin.Context) {
 	filter := bson.M{"_id": id}
 
 	var dictionary model.Dictionary
+
+	err = GetDictionaryCollection(ds).FindOne(ctx, filter).Decode(&dictionary)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
 	if err := c.ShouldBindJSON(&dictionary); err != nil {
 		return
 	}

@@ -17,6 +17,7 @@ func QuestionRoutes(group *gin.RouterGroup, db *mongo.Client) {
 	dictionaries := group.Group("/questions")
 	{
 		dictionaries.GET("", handler.GetQuestions)
+		dictionaries.GET("/:id", handler.GetAQuestion)
 		dictionaries.POST("", handler.CreateAQuestion)
 		dictionaries.PUT("/:id", handler.UpdateAQuestion)
 		dictionaries.DELETE("/:id", handler.DeleteAQuestion)

@@ -39,6 +39,32 @@ func (qs *QuestionServices) GetQuestions(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(questions, responseMessage))
 }
 
+func (qs *QuestionServices) GetAQuestion(c *gin.Context) {
+	ctx := c.Request.Context()
+	//** Get param of the request uri **//
+	param := c.Param("id")
+	//** Convert id to mongodb object id **//
+	id, err := primitive.ObjectIDFromHex(param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, nil)
+		return
+	}
+
+	filter := bson.M{"_id": id}
+
+	var question model.Question
+
+	err = GetQuestionCollection(qs).FindOne(ctx, filter).Decode(&question)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	responseMessage := "Successfully get a question"
+
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(question, responseMessage))
+}
+
 func (qs *QuestionServices) CreateAQuestion(c *gin.Context) {
 	ctx := c.Request.Context()
 	var question model.Question
@@ -59,7 +85,7 @@ func (qs *QuestionServices) CreateAQuestion(c *gin.Context) {
 
 	filter := bson.M{"_id": question.QuizID}
 
-	updateQuiz, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"questions": question}})
+	updateQuiz, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"questions": question.ID}})
 	if err != nil {
 		fmt.Println(err)
 	}

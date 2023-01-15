@@ -19,6 +19,10 @@ func (qh *QuestionHandlers) GetQuestions(c *gin.Context) {
 	qh.Handler.GetQuestions(c)
 }
 
+func (qh *QuestionHandlers) GetAQuestion(c *gin.Context) {
+	qh.Handler.GetAQuestion(c)
+}
+
 func (qh *QuestionHandlers) CreateAQuestion(c *gin.Context) {
 	qh.Handler.CreateAQuestion(c)
 }
