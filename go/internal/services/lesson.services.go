@@ -74,17 +74,49 @@ func (ls *LessonServices) GetALesson(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	var lesson model.Lesson
+	var lesson []model.Lesson
 
-	err = GetLessonCollection(ls).FindOne(ctx, filter).Decode(&lesson)
+	// err = GetLessonCollection(ls).FindOne(ctx, filter).Decode(&lesson)
+
+	//** Get a lesson with dictionary populated **//
+	var lookup = bson.M{
+		"$lookup": bson.M{
+			"from":         "dictionaries",
+			"localField":   "dictionary_id",
+			"foreignField": "_id",
+			"as":           "dictionaries",
+		},
+	}
+	var project = bson.M{
+		"$project": bson.M{
+			"dictionaries": bson.M{
+				"lessons": 0,
+				"quizzes": 0,
+			},
+		},
+	}
+	var match = bson.M{
+		"$match": filter,
+	}
+	cursor, err := GetLessonCollection(ls).Aggregate(ctx, []bson.M{
+		lookup,
+		project,
+		match,
+	})
+
 	if err != nil {
+		panic(err)
+	}
+
+	if err = cursor.All(ctx, &lesson); err != nil {
+		fmt.Println(err.Error())
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	responseMessage := "Successfully get a lesson"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(lesson, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(lesson[0], responseMessage))
 }
 
 func (ls *LessonServices) CreateALesson(c *gin.Context) {
@@ -165,6 +197,12 @@ func (ls *LessonServices) DeleteALesson(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
+	pull := bson.M{"$pull": bson.M{"lessons": id}}
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, ls.Db).UpdateOne(ctx, filter, pull)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 	result, err := GetLessonCollection(ls).DeleteOne(ctx, filter)
 
 	if err != nil {

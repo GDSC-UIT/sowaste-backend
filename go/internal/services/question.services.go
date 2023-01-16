@@ -75,6 +75,12 @@ func (qs *QuestionServices) CreateAQuestion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "Quiz id is required")
 		return
 	}
+
+	if question.DictionaryID == primitive.NilObjectID {
+		c.JSON(http.StatusBadRequest, "Dictionary id is required")
+		return
+	}
+
 	question.ID = primitive.NewObjectID()
 	//** Insert a quiz to the database **//
 	result, err := GetQuestionCollection(qs).InsertOne(ctx, question)
@@ -143,6 +149,13 @@ func (qs *QuestionServices) DeleteAQuestion(c *gin.Context) {
 	}
 
 	filter := bson.M{"_id": id}
+
+	pull := bson.M{"$pull": bson.M{"questions": id}}
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizCollection, qs.Db).UpdateOne(ctx, filter, pull)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 
 	result, err := GetQuestionCollection(qs).DeleteOne(ctx, filter)
 

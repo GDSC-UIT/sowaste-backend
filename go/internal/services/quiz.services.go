@@ -24,7 +24,8 @@ func GetQuizCollection(qs *QuizServices) *mongo.Collection {
 func (qs *QuizServices) GetQuizzes(c *gin.Context) {
 	ctx := c.Request.Context()
 	var quizzes []model.Quiz
-	var lookup = bson.M{
+
+	var lookupDictionaries = bson.M{
 		"$lookup": bson.M{
 			"from":         "dictionaries",
 			"localField":   "dictionary_id",
@@ -32,7 +33,25 @@ func (qs *QuizServices) GetQuizzes(c *gin.Context) {
 			"as":           "dictionaries",
 		},
 	}
-	var project = bson.M{
+	var lookupQuestions = bson.M{
+		"$lookup": bson.M{
+			"from":         "questions",
+			"localField":   "_id",
+			"foreignField": "quiz_id",
+			"as":           "questions",
+		},
+	}
+
+	// var project = bson.M{
+	// 	"$project": bson.M{
+	// 		"dictionaries": bson.M{
+	// 			"quizzes": 0,
+	// 			"lessons": 0,
+	// 		},
+	// 	},
+	// }
+
+	var projectDictionaries = bson.M{
 		"$project": bson.M{
 			"dictionaries": bson.M{
 				"quizzes": 0,
@@ -40,16 +59,29 @@ func (qs *QuizServices) GetQuizzes(c *gin.Context) {
 			},
 		},
 	}
+
+	var match = bson.M{
+		"$match": bson.M{
+			"dictionary_id": bson.M{
+				"$exists": true,
+			},
+		},
+	}
+
 	cursor, err := GetQuizCollection(qs).Aggregate(context.TODO(), []bson.M{
-		lookup,
-		project,
+		lookupQuestions,
+		lookupDictionaries,
+		projectDictionaries,
+		match,
+		// project,
 	})
 
 	if err != nil {
 		panic(err)
 	}
+
 	if err = cursor.All(ctx, &quizzes); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -71,17 +103,56 @@ func (qs *QuizServices) GetAQuiz(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	var quiz model.Quiz
+	var quiz []model.Quiz
 
-	err = GetQuizCollection(qs).FindOne(ctx, filter).Decode(&quiz)
+	//** Get a lesson with dictionary populated **//
+	var lookupDictionaries = bson.M{
+		"$lookup": bson.M{
+			"from":         "dictionaries",
+			"localField":   "dictionary_id",
+			"foreignField": "_id",
+			"as":           "dictionaries",
+		},
+	}
+	var lookupQuestions = bson.M{
+		"$lookup": bson.M{
+			"from":         "questions",
+			"localField":   "_id",
+			"foreignField": "quiz_id",
+			"as":           "questions",
+		},
+	}
+	var project = bson.M{
+		"$project": bson.M{
+			"dictionaries": bson.M{
+				"lessons": 0,
+				"quizzes": 0,
+			},
+		},
+	}
+	var match = bson.M{
+		"$match": filter,
+	}
+	cursor, err := GetQuizCollection(qs).Aggregate(ctx, []bson.M{
+		lookupDictionaries,
+		lookupQuestions,
+		project,
+		match,
+	})
+
 	if err != nil {
+		panic(err)
+	}
+
+	if err = cursor.All(ctx, &quiz); err != nil {
+		fmt.Println(err.Error())
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	responseMessage := "Successfully get a quiz"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(quiz, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(quiz[0], responseMessage))
 }
 
 func (qs *QuizServices) CreateAQuiz(c *gin.Context) {
@@ -164,6 +235,18 @@ func (qs *QuizServices) DeleteAQuiz(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
+	pull := bson.M{"$pull": bson.M{"quizzes": id}}
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, qs.Db).UpdateOne(ctx, filter, pull)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, qs.Db).DeleteMany(ctx, bson.M{"quiz_id": id})
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 	result, err := GetQuizCollection(qs).DeleteOne(ctx, filter)
 
 	if err != nil {

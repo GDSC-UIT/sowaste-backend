@@ -20,6 +20,7 @@ func Init() {
 }
 
 func (gr *GinRouter) RoutersEstablishment() {
+	Router.Current.Use(transport.Recover(database.Client)).Use(transport.Cors)
 	apiRouter := Router.Current.Group("/api")
 
 	/*
@@ -43,7 +44,6 @@ func (gr *GinRouter) RoutersEstablishment() {
 }
 
 func (gr *GinRouter) Run() {
-	Router.Current.Use(transport.Recover(database.Client))
 	port := os.Getenv("PORT")
 	Router.Current.Run(":" + port)
 }

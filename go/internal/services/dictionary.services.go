@@ -80,16 +80,45 @@ func (ds *DictionaryServices) GetADictionary(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	var dictionary model.Dictionary
-	err = GetDictionaryCollection(ds).FindOne(ctx, filter).Decode(&dictionary)
+	var dictionary []model.Dictionary
 
+	// get the dictionary with the lessons and quizzes inside it
+	var match = bson.M{"$match": filter}
+	var lookupLesson = bson.M{"$lookup": bson.M{
+		"from":         "lessons",       //** collection name **//
+		"localField":   "_id",           //** field in the input documents **//
+		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
+		"as":           "lessons",       //** output array field **//
+	}}
+	var lookupQuizzes = bson.M{"$lookup": bson.M{
+		"from":         "quizzes",       //** collection name **//
+		"localField":   "_id",           //** field in the input documents **//
+		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
+		"as":           "quizzes",       //** output array field **//
+	}}
+	var project = bson.M{"$project": bson.M{
+		"quizzes": bson.M{
+			"questions": 0,
+		},
+	}}
+	cursor, err := GetDictionaryCollection(ds).Aggregate(context.TODO(), []bson.M{
+		match,
+		lookupLesson,
+		lookupQuizzes,
+		project,
+	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
+	if err = cursor.All(ctx, &dictionary); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
 	responseMessage := "Successfully get the dictionary with id " + param
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(dictionary, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(dictionary[0], responseMessage))
 }
 
 func (ds *DictionaryServices) CreateADictionary(c *gin.Context) {
@@ -158,7 +187,39 @@ func (ds *DictionaryServices) DeleteADictionary(c *gin.Context) {
 	}
 
 	filter := bson.M{"_id": id}
+	deleteFilter := bson.M{"dictionary_id": id}
 
+	// delete quizzes
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizCollection, ds.Db).DeleteMany(ctx, deleteFilter)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, ds.Db).DeleteMany(ctx, deleteFilter)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	// delete the lesson in the dictionary
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.LessonCollection, ds.Db).DeleteMany(ctx, deleteFilter)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	// delete the quiz of the dictionary
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizCollection, ds.Db).DeleteMany(ctx, deleteFilter)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	// delete the dictionary
 	_, err = GetDictionaryCollection(ds).DeleteOne(ctx, filter)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -168,4 +229,5 @@ func (ds *DictionaryServices) DeleteADictionary(c *gin.Context) {
 	responseMessage := "Successfully deleted the dictionary with id " + param
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(nil, responseMessage))
+
 }
