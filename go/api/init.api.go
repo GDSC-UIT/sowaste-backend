@@ -41,6 +41,7 @@ func (gr *GinRouter) RoutersEstablishment() {
 	routes.LessonRoutes(apiRouter, database.Client.Source)
 	routes.QuizRoutes(apiRouter, database.Client.Source)
 	routes.QuestionRoutes(apiRouter, database.Client.Source)
+	routes.BottleShopRoutes(apiRouter, database.Client.Source)
 }
 
 func (gr *GinRouter) Run() {
