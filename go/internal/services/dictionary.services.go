@@ -16,10 +16,8 @@ type DictionaryServices struct {
 	Db *mongo.Client
 }
 
-const dictionaryDbCollectionName = "dictionaries"
-
 func GetDictionaryCollection(ds *DictionaryServices) *mongo.Collection {
-	return utils.GetDatabaseCollection(dictionaryDbCollectionName, ds.Db)
+	return utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, ds.Db)
 }
 
 func (ds *DictionaryServices) GetDictionaries(c *gin.Context) {
