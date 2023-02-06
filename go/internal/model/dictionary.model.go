@@ -3,11 +3,13 @@ package model
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Dictionary struct {
-	ID          primitive.ObjectID `bson:"_id" json:"_id"`
-	Category    string             `bson:"category" json:"category"`
-	Type        string             `bson:"type" json:"type"`
-	Description string             `bson:"description" json:"description"`
-	Uri         string             `bson:"uri" json:"uri"`
-	Lessons     []Lesson           `bson:"lessons,omitempty" json:"lessons,omitempty"`
-	Quizzes     []Quiz             `bson:"quizzes,omitempty" json:"quizzes,omitempty"`
+	ID               primitive.ObjectID `bson:"_id" json:"_id"`
+	Name             string             `bson:"name" json:"name"`
+	Type             string             `bson:"type" json:"type"`
+	ShortDescription string             `bson:"short_description" json:"short_description"`
+	Description      string             `bson:"description" json:"description"`
+	Uri              string             `bson:"uri" json:"uri"`
+	Lessons          []Lesson           `bson:"lessons,omitempty" json:"lessons,omitempty"`
+	Quizzes          []Quiz             `bson:"quizzes,omitempty" json:"quizzes,omitempty"`
+	DisplayImage     string             `bson:"display_image" json:"display_image"`
 }

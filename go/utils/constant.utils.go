@@ -6,4 +6,5 @@ var DbCollectionConstant = DbCollectionConstants{
 	QuizCollection:       "quizzes",
 	BottleShopCollection: "bottle_shops",
 	QuestionCollection:   "questions",
+	ArticleCollection:    "articles",
 }

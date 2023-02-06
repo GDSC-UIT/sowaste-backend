@@ -6,6 +6,7 @@ type Location struct {
 	X              float32 `bson:"x" json:"x"`
 	Y              float32 `bson:"y" json:"y"`
 	LocationString string  `bson:"location_string" json:"location_string"`
+	LocationMap    string  `bson:"location_map" json:"location_map"`
 }
 
 type BottleShop struct {

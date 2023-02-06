@@ -28,9 +28,9 @@ func (bh *BottleShopHandlers) CreateABottleShop(c *gin.Context) {
 }
 
 func (bh *BottleShopHandlers) UpdateABottleShop(c *gin.Context) {
-	bh.Handler.UpdateAbottleShop(c)
+	bh.Handler.UpdateABottleShop(c)
 }
 
 func (bh *BottleShopHandlers) DeleteABottleShop(c *gin.Context) {
-	bh.Handler.DeleteAbottleShop(c)
+	bh.Handler.DeleteABottleShop(c)
 }

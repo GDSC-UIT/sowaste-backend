@@ -72,7 +72,6 @@ func (bss *BottleShopServices) CreateABottleShop(c *gin.Context) {
 	}
 
 	bottleShop.ID = primitive.NewObjectID()
-	//** Insert a quiz to the database **//
 	result, err := GetBottleShopCollection(bss).InsertOne(ctx, bottleShop)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -84,7 +83,7 @@ func (bss *BottleShopServices) CreateABottleShop(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
 }
 
-func (bss *BottleShopServices) UpdateAbottleShop(c *gin.Context) {
+func (bss *BottleShopServices) UpdateABottleShop(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)
@@ -121,7 +120,7 @@ func (bss *BottleShopServices) UpdateAbottleShop(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
 }
 
-func (bss *BottleShopServices) DeleteAbottleShop(c *gin.Context) {
+func (bss *BottleShopServices) DeleteABottleShop(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)

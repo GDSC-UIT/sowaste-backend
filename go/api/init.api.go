@@ -17,6 +17,7 @@ var Router GinRouter
 
 func Init() {
 	Router.Current = gin.Default()
+
 }
 
 func (gr *GinRouter) RoutersEstablishment() {
@@ -37,11 +38,14 @@ func (gr *GinRouter) RoutersEstablishment() {
 
 		! Similar flow for other services
 	*/
+	// routes.APIDocumentationRoutes(Router.Current)
+	routes.RootRoutes(apiRouter)
 	routes.DictonaryRoutes(apiRouter, database.Client.Source)
 	routes.LessonRoutes(apiRouter, database.Client.Source)
 	routes.QuizRoutes(apiRouter, database.Client.Source)
 	routes.QuestionRoutes(apiRouter, database.Client.Source)
 	routes.BottleShopRoutes(apiRouter, database.Client.Source)
+	routes.ArticleRoutes(apiRouter, database.Client.Source)
 }
 
 func (gr *GinRouter) Run() {
