@@ -99,7 +99,7 @@ func (qs *QuestionServices) CreateAQuestion(c *gin.Context) {
 
 	responseMessage := "Successfully create a question"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "question": question}, responseMessage))
 }
 
 func (qs *QuestionServices) UpdateAQuestion(c *gin.Context) {
@@ -136,7 +136,7 @@ func (qs *QuestionServices) UpdateAQuestion(c *gin.Context) {
 
 	responseMessage := "Successfully update a question"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "question": question}, responseMessage))
 }
 
 func (qs *QuestionServices) DeleteAQuestion(c *gin.Context) {

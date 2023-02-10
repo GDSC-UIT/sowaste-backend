@@ -80,7 +80,7 @@ func (bss *BottleShopServices) CreateABottleShop(c *gin.Context) {
 
 	responseMessage := "Successfully create a bottleShop"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "bottle_shop": bottleShop}, responseMessage))
 }
 
 func (bss *BottleShopServices) UpdateABottleShop(c *gin.Context) {
@@ -117,7 +117,7 @@ func (bss *BottleShopServices) UpdateABottleShop(c *gin.Context) {
 
 	responseMessage := "Successfully update a bottleShop"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "bottle_shop": bottleShop}, responseMessage))
 }
 
 func (bss *BottleShopServices) DeleteABottleShop(c *gin.Context) {

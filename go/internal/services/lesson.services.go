@@ -146,7 +146,7 @@ func (ls *LessonServices) CreateALesson(c *gin.Context) {
 
 	responseMessage := "Successfully create a lesson"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "lesson": lesson}, responseMessage))
 }
 
 func (ls *LessonServices) UpdateALesson(c *gin.Context) {
@@ -183,7 +183,7 @@ func (ls *LessonServices) UpdateALesson(c *gin.Context) {
 
 	responseMessage := "Successfully update a lesson"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "lesson": lesson}, responseMessage))
 }
 
 func (ls *LessonServices) DeleteALesson(c *gin.Context) {

@@ -9,7 +9,7 @@ type Dictionary struct {
 	ShortDescription string             `bson:"short_description" json:"short_description"`
 	Description      string             `bson:"description" json:"description"`
 	Uri              string             `bson:"uri" json:"uri"`
-	Lessons          []Lesson           `bson:"lessons,omitempty" json:"lessons,omitempty"`
-	Quizzes          []Quiz             `bson:"quizzes,omitempty" json:"quizzes,omitempty"`
+	Lessons          []Lesson           `bson:"lessons" json:"lessons"`
+	Quizzes          []Quiz             `bson:"quizzes" json:"quizzes"`
 	DisplayImage     string             `bson:"display_image" json:"display_image"`
 }

@@ -137,7 +137,7 @@ func (ds *DictionaryServices) CreateADictionary(c *gin.Context) {
 	}
 
 	responseMessage := "Successfully created a dictionary"
-	c.JSON(http.StatusCreated, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusCreated, utils.SuccessfulResponse(bson.M{"result": result, "dictionary": dictionary}, responseMessage))
 }
 
 func (ds *DictionaryServices) UpdateADictionary(c *gin.Context) {
@@ -172,7 +172,7 @@ func (ds *DictionaryServices) UpdateADictionary(c *gin.Context) {
 	}
 
 	responseMessage := "Successfully updated the dictionary with id " + param
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "dictionary": dictionary}, responseMessage))
 }
 
 func (ds *DictionaryServices) DeleteADictionary(c *gin.Context) {

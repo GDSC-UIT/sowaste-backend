@@ -184,7 +184,7 @@ func (qs *QuizServices) CreateAQuiz(c *gin.Context) {
 
 	responseMessage := "Successfully create a quiz"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "quiz": quiz}, responseMessage))
 }
 
 func (qs *QuizServices) UpdateAQuiz(c *gin.Context) {
@@ -221,7 +221,7 @@ func (qs *QuizServices) UpdateAQuiz(c *gin.Context) {
 
 	responseMessage := "Successfully update a quiz"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "quiz": quiz}, responseMessage))
 }
 
 func (qs *QuizServices) DeleteAQuiz(c *gin.Context) {

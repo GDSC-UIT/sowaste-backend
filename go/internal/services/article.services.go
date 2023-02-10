@@ -84,7 +84,7 @@ func (as *ArticleServices) CreateArticle(c *gin.Context) {
 
 	responseMessage := "Successfully create an article"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "article": article}, responseMessage))
 }
 
 func (as *ArticleServices) UpdateArticle(c *gin.Context) {
@@ -121,7 +121,7 @@ func (as *ArticleServices) UpdateArticle(c *gin.Context) {
 
 	responseMessage := "Successfully update an article"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "article": article}, responseMessage))
 }
 
 func (as *ArticleServices) DeleteArticle(c *gin.Context) {

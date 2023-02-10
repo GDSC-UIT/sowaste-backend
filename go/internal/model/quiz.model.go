@@ -7,8 +7,8 @@ type Quiz struct {
 	Title        string             `bson:"title" json:"title"`
 	Description  string             `bson:"description" json:"description"`
 	DictionaryID primitive.ObjectID `bson:"dictionary_id" json:"dictionary_id"`
-	Dictionaries []Dictionary       `bson:"dictionaries,omitempty" json:"dictionaries,omitempty"`
+	Dictionaries []Dictionary       `bson:"dictionaries" json:"dictionaries"`
 	Status       string             `bson:"status" json:"status"`
 	Point        int64              `bson:"point" json:"point"`
-	Question     []Question         `bson:"questions,omitempty" json:"questions,omitempty"`
+	Question     []Question         `bson:"questions" json:"questions"`
 }
