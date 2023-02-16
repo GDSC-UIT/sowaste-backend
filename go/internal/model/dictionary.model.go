@@ -11,6 +11,6 @@ type Dictionary struct {
 	Description      string             `bson:"description" json:"description"`
 	Uri              string             `bson:"uri" json:"uri"`
 	Lessons          []Lesson           `bson:"lessons" json:"lessons"`
-	Quizzes          []Quiz             `bson:"quizzes" json:"quizzes"`
+	Questions        []Question         `bson:"questions" json:"questions"`
 	DisplayImage     string             `bson:"display_image" json:"display_image"`
 }

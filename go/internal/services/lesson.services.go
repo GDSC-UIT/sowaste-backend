@@ -37,8 +37,8 @@ func (ls *LessonServices) GetLessons(c *gin.Context) {
 	var project = bson.M{
 		"$project": bson.M{
 			"dictionaries": bson.M{
-				"lessons": 0,
-				"quizzes": 0,
+				"lessons":   0,
+				"questions": 0,
 			},
 		},
 	}
@@ -90,8 +90,8 @@ func (ls *LessonServices) GetALesson(c *gin.Context) {
 	var project = bson.M{
 		"$project": bson.M{
 			"dictionaries": bson.M{
-				"lessons": 0,
-				"quizzes": 0,
+				"lessons":   0,
+				"questions": 0,
 			},
 		},
 	}

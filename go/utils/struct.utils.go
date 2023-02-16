@@ -8,8 +8,8 @@ type Response struct {
 type DbCollectionConstants struct {
 	DictionaryCollection string
 	LessonCollection     string
-	QuizCollection       string
-	BottleShopCollection string
 	QuestionCollection   string
+	OptionCollection     string
+	BottleShopCollection string
 	ArticleCollection    string
 }

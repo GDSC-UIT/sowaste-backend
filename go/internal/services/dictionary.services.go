@@ -35,14 +35,14 @@ func (ds *DictionaryServices) GetDictionaries(c *gin.Context) {
 		"as":           "lessons",       //** output array field **//
 	}}
 	var lookupQuizzes = bson.M{"$lookup": bson.M{
-		"from":         "quizzes",       //** collection name **//
+		"from":         "questions",     //** collection name **//
 		"localField":   "_id",           //** field in the input documents **//
 		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
-		"as":           "quizzes",       //** output array field **//
+		"as":           "questions",     //** output array field **//
 	}}
 	var projectQuizzes = bson.M{"$project": bson.M{
-		"quizzes": bson.M{
-			"questions": 0,
+		"questions": bson.M{
+			"options": 0,
 		},
 	}}
 
@@ -89,14 +89,14 @@ func (ds *DictionaryServices) GetADictionary(c *gin.Context) {
 		"as":           "lessons",       //** output array field **//
 	}}
 	var lookupQuizzes = bson.M{"$lookup": bson.M{
-		"from":         "quizzes",       //** collection name **//
+		"from":         "questions",     //** collection name **//
 		"localField":   "_id",           //** field in the input documents **//
 		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
-		"as":           "quizzes",       //** output array field **//
+		"as":           "questions",     //** output array field **//
 	}}
 	var project = bson.M{"$project": bson.M{
-		"quizzes": bson.M{
-			"questions": 0,
+		"questions": bson.M{
+			"options": 0,
 		},
 	}}
 	cursor, err := GetDictionaryCollection(ds).Aggregate(context.TODO(), []bson.M{
@@ -128,7 +128,7 @@ func (ds *DictionaryServices) CreateADictionary(c *gin.Context) {
 	}
 	dictionary.ID = primitive.NewObjectID()
 	dictionary.Lessons = []model.Lesson{}
-	dictionary.Quizzes = []model.Quiz{}
+	dictionary.Questions = []model.Question{}
 
 	result, err := GetDictionaryCollection(ds).InsertOne(ctx, dictionary)
 	if err != nil {
@@ -188,13 +188,13 @@ func (ds *DictionaryServices) DeleteADictionary(c *gin.Context) {
 	deleteFilter := bson.M{"dictionary_id": id}
 
 	// delete quizzes
-	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizCollection, ds.Db).DeleteMany(ctx, deleteFilter)
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, ds.Db).DeleteMany(ctx, deleteFilter)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, ds.Db).DeleteMany(ctx, deleteFilter)
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.OptionCollection, ds.Db).DeleteMany(ctx, deleteFilter)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -210,7 +210,7 @@ func (ds *DictionaryServices) DeleteADictionary(c *gin.Context) {
 	}
 
 	// delete the quiz of the dictionary
-	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizCollection, ds.Db).DeleteMany(ctx, deleteFilter)
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, ds.Db).DeleteMany(ctx, deleteFilter)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)

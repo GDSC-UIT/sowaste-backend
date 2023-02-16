@@ -13,33 +13,84 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type QuestionServices struct {
+type QuizServices struct {
 	Db *mongo.Client
 }
 
-func GetQuestionCollection(qs *QuestionServices) *mongo.Collection {
+func GetQuizCollection(qs *QuizServices) *mongo.Collection {
 	return utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, qs.Db)
 }
 
-func (qs *QuestionServices) GetQuestions(c *gin.Context) {
+func (qs *QuizServices) GetQuizzes(c *gin.Context) {
 	ctx := c.Request.Context()
-	var questions []model.Question
-	cursor, err := GetQuestionCollection(qs).Find(context.TODO(), bson.M{})
+	var quizzes []model.Question
+
+	var lookupDictionaries = bson.M{
+		"$lookup": bson.M{
+			"from":         "dictionaries",
+			"localField":   "dictionary_id",
+			"foreignField": "_id",
+			"as":           "dictionaries",
+		},
+	}
+	var lookupQuestions = bson.M{
+		"$lookup": bson.M{
+			"from":         "options",
+			"localField":   "_id",
+			"foreignField": "question_id",
+			"as":           "options",
+		},
+	}
+
+	// var project = bson.M{
+	// 	"$project": bson.M{
+	// 		"dictionaries": bson.M{
+	// 			"quizzes": 0,
+	// 			"lessons": 0,
+	// 		},
+	// 	},
+	// }
+
+	var projectDictionaries = bson.M{
+		"$project": bson.M{
+			"dictionaries": bson.M{
+				"questions": 0,
+				"lessons":   0,
+			},
+		},
+	}
+
+	var match = bson.M{
+		"$match": bson.M{
+			"dictionary_id": bson.M{
+				"$exists": true,
+			},
+		},
+	}
+
+	cursor, err := GetQuizCollection(qs).Aggregate(context.TODO(), []bson.M{
+		lookupQuestions,
+		lookupDictionaries,
+		projectDictionaries,
+		match,
+		// project,
+	})
 
 	if err != nil {
 		panic(err)
 	}
-	if err = cursor.All(ctx, &questions); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+
+	if err = cursor.All(ctx, &quizzes); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	responseMessage := "Successfully get all quizzes"
+	responseMessage := "Successfully get all questions"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(questions, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(quizzes, responseMessage))
 }
 
-func (qs *QuestionServices) GetAQuestion(c *gin.Context) {
+func (qs *QuizServices) GetAQuiz(c *gin.Context) {
 	ctx := c.Request.Context()
 	//** Get param of the request uri **//
 	param := c.Param("id")
@@ -52,57 +103,91 @@ func (qs *QuestionServices) GetAQuestion(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	var question model.Question
+	var quiz []model.Question
 
-	err = GetQuestionCollection(qs).FindOne(ctx, filter).Decode(&question)
+	//** Get a lesson with dictionary populated **//
+	var lookupDictionaries = bson.M{
+		"$lookup": bson.M{
+			"from":         "dictionaries",
+			"localField":   "dictionary_id",
+			"foreignField": "_id",
+			"as":           "dictionaries",
+		},
+	}
+	var lookupQuestions = bson.M{
+		"$lookup": bson.M{
+			"from":         "options",
+			"localField":   "_id",
+			"foreignField": "question_id",
+			"as":           "options",
+		},
+	}
+	var project = bson.M{
+		"$project": bson.M{
+			"dictionaries": bson.M{
+				"lessons":   0,
+				"questions": 0,
+			},
+		},
+	}
+	var match = bson.M{
+		"$match": filter,
+	}
+	cursor, err := GetQuizCollection(qs).Aggregate(ctx, []bson.M{
+		lookupDictionaries,
+		lookupQuestions,
+		project,
+		match,
+	})
+
 	if err != nil {
+		panic(err)
+	}
+
+	if err = cursor.All(ctx, &quiz); err != nil {
+		fmt.Println(err.Error())
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	responseMessage := "Successfully get a question"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(question, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(quiz[0], responseMessage))
 }
 
-func (qs *QuestionServices) CreateAQuestion(c *gin.Context) {
+func (qs *QuizServices) CreateAQuiz(c *gin.Context) {
 	ctx := c.Request.Context()
-	var question model.Question
-	if err := c.ShouldBindJSON(&question); err != nil {
+	var quiz model.Question
+	if err := c.ShouldBindJSON(&quiz); err != nil {
 		return
 	}
-	if question.QuizID == primitive.NilObjectID {
-		c.JSON(http.StatusBadRequest, "Quiz id is required")
-		return
-	}
-
-	if question.DictionaryID == primitive.NilObjectID {
+	if quiz.DictionaryID == primitive.NilObjectID {
 		c.JSON(http.StatusBadRequest, "Dictionary id is required")
 		return
 	}
-
-	question.ID = primitive.NewObjectID()
+	quiz.ID = primitive.NewObjectID()
+	quiz.Option = []model.Option{}
 	//** Insert a quiz to the database **//
-	result, err := GetQuestionCollection(qs).InsertOne(ctx, question)
+	result, err := GetQuizCollection(qs).InsertOne(ctx, quiz)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	filter := bson.M{"_id": question.QuizID}
+	filter := bson.M{"_id": quiz.DictionaryID}
 
-	updateQuiz, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"questions": question.ID}})
+	updateDictionary, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"questions": quiz.ID}})
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(updateQuiz.MatchedCount)
+	fmt.Println(updateDictionary.MatchedCount)
 
 	responseMessage := "Successfully create a question"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "question": question}, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "question": quiz}, responseMessage))
 }
 
-func (qs *QuestionServices) UpdateAQuestion(c *gin.Context) {
+func (qs *QuizServices) UpdateAQuiz(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)
@@ -113,21 +198,21 @@ func (qs *QuestionServices) UpdateAQuestion(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	var question model.Question
+	var quiz model.Question
 
-	err = GetQuestionCollection(qs).FindOne(ctx, filter).Decode(&question)
+	err = GetQuizCollection(qs).FindOne(ctx, filter).Decode(&quiz)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	if err := c.ShouldBindJSON(&question); err != nil {
+	if err := c.ShouldBindJSON(&quiz); err != nil {
 		return
 	}
 
-	update := bson.M{"$set": question}
+	update := bson.M{"$set": quiz}
 
-	result, err := GetQuestionCollection(qs).UpdateOne(ctx, filter, update)
+	result, err := GetQuizCollection(qs).UpdateOne(ctx, filter, update)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -136,10 +221,10 @@ func (qs *QuestionServices) UpdateAQuestion(c *gin.Context) {
 
 	responseMessage := "Successfully update a question"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "question": question}, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "question": quiz}, responseMessage))
 }
 
-func (qs *QuestionServices) DeleteAQuestion(c *gin.Context) {
+func (qs *QuizServices) DeleteAQuiz(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)
@@ -151,13 +236,18 @@ func (qs *QuestionServices) DeleteAQuestion(c *gin.Context) {
 	filter := bson.M{"_id": id}
 
 	pull := bson.M{"$pull": bson.M{"questions": id}}
-	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizCollection, qs.Db).UpdateOne(ctx, filter, pull)
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, qs.Db).UpdateOne(ctx, filter, pull)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	result, err := GetQuestionCollection(qs).DeleteOne(ctx, filter)
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, qs.Db).DeleteMany(ctx, bson.M{"question_id": id})
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	result, err := GetQuizCollection(qs).DeleteOne(ctx, filter)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)

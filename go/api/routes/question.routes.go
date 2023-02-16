@@ -7,19 +7,19 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func QuestionRoutes(group *gin.RouterGroup, db *mongo.Client) {
+func QuizRoutes(group *gin.RouterGroup, db *mongo.Client) {
 
-	handler := handlers.QuestionHandlers{
-		Handler: services.QuestionServices{
+	handler := handlers.QuizHandlers{
+		Handler: services.QuizServices{
 			Db: db,
 		},
 	}
 	dictionaries := group.Group("/questions")
 	{
-		dictionaries.GET("", handler.GetQuestions)
-		dictionaries.GET("/:id", handler.GetAQuestion)
-		dictionaries.POST("", handler.CreateAQuestion)
-		dictionaries.PUT("/:id", handler.UpdateAQuestion)
-		dictionaries.DELETE("/:id", handler.DeleteAQuestion)
+		dictionaries.GET("", handler.GetQuizzes)
+		dictionaries.GET("/:id", handler.GetAQuiz)
+		dictionaries.POST("", handler.CreateAQuiz)
+		dictionaries.PUT("/:id", handler.UpdateAQuiz)
+		dictionaries.DELETE("/:id", handler.DeleteAQuiz)
 	}
 }
