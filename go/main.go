@@ -4,6 +4,7 @@ import (
 	"github.com/GDSC-UIT/sowaste-backend/go/api"
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/config"
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/database"
+	"github.com/GDSC-UIT/sowaste-backend/go/transport"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,6 +19,10 @@ func main() {
 	database.Client.ConnectDb()
 	defer database.Client.DisconnetDb()
 
+	//** Redis connection **/
+	transport.Redis.InitRedis()
+	defer transport.Redis.DisconnetRedis()
+
 	//** API connect (router) **/
 	api.Init()
 	api.Router.RoutersEstablishment()
@@ -28,5 +33,4 @@ func main() {
 		ctx.HTML(200, "index.html", gin.H{})
 	})
 	api.Router.Run()
-
 }

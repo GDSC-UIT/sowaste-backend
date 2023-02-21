@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
+	"github.com/GDSC-UIT/sowaste-backend/go/transport"
 	"github.com/GDSC-UIT/sowaste-backend/go/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,6 +25,16 @@ func GetQuestionCollection(qs *QuestionServices) *mongo.Collection {
 func (qs *QuestionServices) GetQuestions(c *gin.Context) {
 	ctx := c.Request.Context()
 	var questions []model.Option
+	var cacheKey = utils.CacheConstant.Options
+	cacheOptions, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get options from cache")
+	}
+	if cacheOptions != "" {
+		cacheOptionsParsed := utils.JSONParse(cacheOptions)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheOptionsParsed, "Successfully get options from cache"))
+		return
+	}
 	cursor, err := GetQuestionCollection(qs).Find(context.TODO(), bson.M{})
 
 	if err != nil {
@@ -35,6 +46,7 @@ func (qs *QuestionServices) GetQuestions(c *gin.Context) {
 	}
 
 	responseMessage := "Successfully get all options"
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(questions))
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(questions, responseMessage))
 }
@@ -53,6 +65,16 @@ func (qs *QuestionServices) GetAQuestion(c *gin.Context) {
 	filter := bson.M{"_id": id}
 
 	var question model.Option
+	var cacheKey = utils.CacheConstant.Option + ":" + param
+	cacheOption, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get option from cache")
+	}
+	if cacheOption != "" {
+		cacheOptionParsed := utils.JSONParse(cacheOption)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheOptionParsed, "Successfully get option from cache"))
+		return
+	}
 
 	err = GetQuestionCollection(qs).FindOne(ctx, filter).Decode(&question)
 	if err != nil {
@@ -60,6 +82,7 @@ func (qs *QuestionServices) GetAQuestion(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(question))
 	responseMessage := "Successfully get an option"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(question, responseMessage))
@@ -72,7 +95,7 @@ func (qs *QuestionServices) CreateAQuestion(c *gin.Context) {
 		return
 	}
 	if question.QuestionID == primitive.NilObjectID {
-		c.JSON(http.StatusBadRequest, "Question Id is required")
+		c.JSON(http.StatusBadRequest, "Option Id is required")
 		return
 	}
 
@@ -97,6 +120,7 @@ func (qs *QuestionServices) CreateAQuestion(c *gin.Context) {
 	}
 	fmt.Println(updateQuiz.MatchedCount)
 
+	transport.Redis.DeleteValue(utils.CacheConstant.Options)
 	responseMessage := "Successfully create a question"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "option": question}, responseMessage))
@@ -135,6 +159,7 @@ func (qs *QuestionServices) UpdateAQuestion(c *gin.Context) {
 	}
 
 	responseMessage := "Successfully update a question"
+	transport.Redis.DeleteValue(utils.CacheConstant.Options)
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "option": question}, responseMessage))
 }
@@ -165,6 +190,8 @@ func (qs *QuestionServices) DeleteAQuestion(c *gin.Context) {
 	}
 
 	responseMessage := "Successfully delete a question"
+	transport.Redis.DeleteValue(utils.CacheConstant.Options)
+	transport.Redis.DeleteValue(utils.CacheConstant.Option + ":" + param)
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
 

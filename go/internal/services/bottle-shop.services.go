@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
+	"github.com/GDSC-UIT/sowaste-backend/go/transport"
 	"github.com/GDSC-UIT/sowaste-backend/go/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,6 +25,16 @@ func GetBottleShopCollection(bss *BottleShopServices) *mongo.Collection {
 func (bss *BottleShopServices) GetBottleShops(c *gin.Context) {
 	ctx := c.Request.Context()
 	var bottleShops []model.BottleShop
+	var cacheKey = utils.CacheConstant.BottleShops
+	cacheBottleShops, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get bottle shops from cache")
+	}
+	if cacheBottleShops != "" {
+		cacheBottleShopParsed := utils.JSONParse(cacheBottleShops)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheBottleShopParsed, "Successfully get bottle shops from cache"))
+		return
+	}
 	cursor, err := GetBottleShopCollection(bss).Find(context.TODO(), bson.M{})
 
 	if err != nil {
@@ -33,7 +45,8 @@ func (bss *BottleShopServices) GetBottleShops(c *gin.Context) {
 		return
 	}
 
-	responseMessage := "Successfully get all quizzes"
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(bottleShops))
+	responseMessage := "Successfully get all bottle shops"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bottleShops, responseMessage))
 }
@@ -52,6 +65,16 @@ func (bss *BottleShopServices) GetABottleShop(c *gin.Context) {
 	filter := bson.M{"_id": id}
 
 	var bottleShop model.BottleShop
+	var cacheKey = utils.CacheConstant.BottleShops + ":" + param
+	cacheBottleShop, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get bottle shop from cache")
+	}
+	if cacheBottleShop != "" {
+		cacheBottleShopParsed := utils.JSONParse(cacheBottleShop)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheBottleShopParsed, "Successfully get bottle shop from cache"))
+		return
+	}
 
 	err = GetBottleShopCollection(bss).FindOne(ctx, filter).Decode(&bottleShop)
 	if err != nil {
@@ -59,6 +82,7 @@ func (bss *BottleShopServices) GetABottleShop(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(bottleShop))
 	responseMessage := "Successfully get a bottleShop"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bottleShop, responseMessage))
@@ -78,6 +102,7 @@ func (bss *BottleShopServices) CreateABottleShop(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.DeleteValue(utils.CacheConstant.BottleShops)
 	responseMessage := "Successfully create a bottleShop"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "bottle_shop": bottleShop}, responseMessage))
@@ -115,6 +140,7 @@ func (bss *BottleShopServices) UpdateABottleShop(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.DeleteValue(utils.CacheConstant.BottleShops)
 	responseMessage := "Successfully update a bottleShop"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "bottle_shop": bottleShop}, responseMessage))
@@ -138,6 +164,8 @@ func (bss *BottleShopServices) DeleteABottleShop(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.DeleteValue(utils.CacheConstant.BottleShops)
+	transport.Redis.DeleteValue(utils.CacheConstant.BottleShop + ":" + param)
 	responseMessage := "Successfully delete a bottleShop"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))

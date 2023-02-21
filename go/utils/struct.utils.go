@@ -13,3 +13,18 @@ type DbCollectionConstants struct {
 	BottleShopCollection string
 	ArticleCollection    string
 }
+
+type CacheConstants struct {
+	Dictionaries string
+	Dictionary   string
+	Lessons      string
+	Lesson       string
+	Questions    string
+	Question     string
+	Options      string
+	Option       string
+	BottleShops  string
+	BottleShop   string
+	Articles     string
+	Article      string
+}

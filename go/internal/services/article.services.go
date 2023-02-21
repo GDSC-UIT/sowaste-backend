@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
+	"github.com/GDSC-UIT/sowaste-backend/go/transport"
 	"github.com/GDSC-UIT/sowaste-backend/go/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,6 +25,16 @@ func GetArticleCollection(as *ArticleServices) *mongo.Collection {
 func (as *ArticleServices) GetArticles(c *gin.Context) {
 	ctx := c.Request.Context()
 	var articles []model.Article
+	var cacheKey = utils.CacheConstant.Articles
+	cacheArticles, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get articles from cache")
+	}
+	if cacheArticles != "" {
+		cacheArticlesParsed := utils.JSONParse(cacheArticles)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheArticlesParsed, "Successfully get all articles from cache"))
+		return
+	}
 	cursor, err := GetArticleCollection(as).Find(context.TODO(), bson.M{})
 
 	if err != nil {
@@ -32,7 +44,7 @@ func (as *ArticleServices) GetArticles(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(articles))
 	responseMessage := "Successfully get all articles"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(articles, responseMessage))
@@ -52,6 +64,17 @@ func (as *ArticleServices) GetAnArticle(c *gin.Context) {
 	filter := bson.M{"_id": id}
 
 	var article model.Article
+	var cacheKey = utils.CacheConstant.Article + ":" + param
+
+	cacheArticle, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get articles from cache")
+	}
+	if cacheArticle != "" {
+		cacheArticleParsed := utils.JSONParse(cacheArticle)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheArticleParsed, "Successfully get an article from cache"))
+		return
+	}
 
 	err = GetArticleCollection(as).FindOne(ctx, filter).Decode(&article)
 	if err != nil {
@@ -59,6 +82,7 @@ func (as *ArticleServices) GetAnArticle(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(article))
 	responseMessage := "Successfully get an article"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(article, responseMessage))
@@ -81,6 +105,8 @@ func (as *ArticleServices) CreateArticle(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
+
+	transport.Redis.DeleteValue(utils.CacheConstant.Articles)
 
 	responseMessage := "Successfully create an article"
 
@@ -118,6 +144,7 @@ func (as *ArticleServices) UpdateArticle(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
+	transport.Redis.DeleteValue(utils.CacheConstant.Articles)
 
 	responseMessage := "Successfully update an article"
 
@@ -142,6 +169,8 @@ func (as *ArticleServices) DeleteArticle(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.DeleteValue(utils.CacheConstant.Articles)
+	transport.Redis.DeleteValue(utils.CacheConstant.Article + ":" + param)
 	responseMessage := "Successfully delete an article"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))

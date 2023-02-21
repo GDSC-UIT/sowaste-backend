@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
+	"github.com/GDSC-UIT/sowaste-backend/go/transport"
 	"github.com/GDSC-UIT/sowaste-backend/go/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,17 +25,21 @@ func GetDictionaryCollection(ds *DictionaryServices) *mongo.Collection {
 func (ds *DictionaryServices) GetDictionaries(c *gin.Context) {
 	ctx := c.Request.Context()
 	var dictionaries []model.Dictionary
+	var cacheKey = utils.CacheConstant.Dictionaries
+	cacheDictionaries, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get dictionaries from cache")
+	}
+	if cacheDictionaries != "" {
+		cacheDictionariesParsed := utils.JSONParse(cacheDictionaries)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheDictionariesParsed, "Successfully get dictionaries from cache"))
+		return
+	}
 
 	/*
 		! Example of the result of the aggregation
 		TODO https://vidler.app/blog/data/populate-golang-relationship-field-using-mongodb-aggregate-and-lookup/
 	*/
-	var lookupLesson = bson.M{"$lookup": bson.M{
-		"from":         "lessons",       //** collection name **//
-		"localField":   "_id",           //** field in the input documents **//
-		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
-		"as":           "lessons",       //** output array field **//
-	}}
 	var lookupQuizzes = bson.M{"$lookup": bson.M{
 		"from":         "questions",     //** collection name **//
 		"localField":   "_id",           //** field in the input documents **//
@@ -47,7 +53,6 @@ func (ds *DictionaryServices) GetDictionaries(c *gin.Context) {
 	}}
 
 	cursor, err := GetDictionaryCollection(ds).Aggregate(context.TODO(), []bson.M{
-		lookupLesson,
 		lookupQuizzes,
 		projectQuizzes,
 	})
@@ -62,6 +67,7 @@ func (ds *DictionaryServices) GetDictionaries(c *gin.Context) {
 	}
 
 	responseMessage := "Successfully get all dictionaries"
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(dictionaries))
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(dictionaries, responseMessage))
 }
 
@@ -79,15 +85,18 @@ func (ds *DictionaryServices) GetADictionary(c *gin.Context) {
 	filter := bson.M{"_id": id}
 
 	var dictionary []model.Dictionary
-
+	var cacheKey = utils.CacheConstant.Dictionary + ":" + param
+	cacheDictionary, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get dictionary from cache")
+	}
+	if cacheDictionary != "" {
+		cacheDictionaryParsed := utils.JSONParse(cacheDictionary)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheDictionaryParsed, "Successfully get dictionary from cache"))
+		return
+	}
 	// get the dictionary with the lessons and quizzes inside it
 	var match = bson.M{"$match": filter}
-	var lookupLesson = bson.M{"$lookup": bson.M{
-		"from":         "lessons",       //** collection name **//
-		"localField":   "_id",           //** field in the input documents **//
-		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
-		"as":           "lessons",       //** output array field **//
-	}}
 	var lookupQuizzes = bson.M{"$lookup": bson.M{
 		"from":         "questions",     //** collection name **//
 		"localField":   "_id",           //** field in the input documents **//
@@ -101,7 +110,6 @@ func (ds *DictionaryServices) GetADictionary(c *gin.Context) {
 	}}
 	cursor, err := GetDictionaryCollection(ds).Aggregate(context.TODO(), []bson.M{
 		match,
-		lookupLesson,
 		lookupQuizzes,
 		project,
 	})
@@ -115,6 +123,7 @@ func (ds *DictionaryServices) GetADictionary(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(dictionary))
 	responseMessage := "Successfully get the dictionary with id " + param
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(dictionary[0], responseMessage))
 }
@@ -127,7 +136,6 @@ func (ds *DictionaryServices) CreateADictionary(c *gin.Context) {
 		return
 	}
 	dictionary.ID = primitive.NewObjectID()
-	dictionary.Lessons = []model.Lesson{}
 	dictionary.Questions = []model.Question{}
 
 	result, err := GetDictionaryCollection(ds).InsertOne(ctx, dictionary)
@@ -137,6 +145,7 @@ func (ds *DictionaryServices) CreateADictionary(c *gin.Context) {
 	}
 
 	responseMessage := "Successfully created a dictionary"
+	transport.Redis.DeleteValue(utils.CacheConstant.Dictionaries)
 	c.JSON(http.StatusCreated, utils.SuccessfulResponse(bson.M{"result": result, "dictionary": dictionary}, responseMessage))
 }
 
@@ -171,6 +180,7 @@ func (ds *DictionaryServices) UpdateADictionary(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.DeleteValue(utils.CacheConstant.Dictionaries)
 	responseMessage := "Successfully updated the dictionary with id " + param
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "dictionary": dictionary}, responseMessage))
 }
@@ -224,6 +234,8 @@ func (ds *DictionaryServices) DeleteADictionary(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.DeleteValue(utils.CacheConstant.Dictionaries)
+	transport.Redis.DeleteValue(utils.CacheConstant.Dictionary + ":" + param)
 	responseMessage := "Successfully deleted the dictionary with id " + param
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(nil, responseMessage))

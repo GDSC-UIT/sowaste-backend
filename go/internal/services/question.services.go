@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
+	"github.com/GDSC-UIT/sowaste-backend/go/transport"
 	"github.com/GDSC-UIT/sowaste-backend/go/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,6 +25,16 @@ func GetQuizCollection(qs *QuizServices) *mongo.Collection {
 func (qs *QuizServices) GetQuizzes(c *gin.Context) {
 	ctx := c.Request.Context()
 	var quizzes []model.Question
+	var cacheKey = utils.CacheConstant.Questions
+	cacheQuestions, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get questions from cache")
+	}
+	if cacheQuestions != "" {
+		cacheQuestionsParsed := utils.JSONParse(cacheQuestions)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheQuestionsParsed, "Successfully get questions from cache"))
+		return
+	}
 
 	var lookupDictionaries = bson.M{
 		"$lookup": bson.M{
@@ -41,15 +52,6 @@ func (qs *QuizServices) GetQuizzes(c *gin.Context) {
 			"as":           "options",
 		},
 	}
-
-	// var project = bson.M{
-	// 	"$project": bson.M{
-	// 		"dictionaries": bson.M{
-	// 			"quizzes": 0,
-	// 			"lessons": 0,
-	// 		},
-	// 	},
-	// }
 
 	var projectDictionaries = bson.M{
 		"$project": bson.M{
@@ -85,6 +87,7 @@ func (qs *QuizServices) GetQuizzes(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(quizzes))
 	responseMessage := "Successfully get all questions"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(quizzes, responseMessage))
@@ -104,8 +107,17 @@ func (qs *QuizServices) GetAQuiz(c *gin.Context) {
 	filter := bson.M{"_id": id}
 
 	var quiz []model.Question
+	var cacheKey = utils.CacheConstant.Questions + ":" + param
+	cacheQuestion, err := transport.Redis.GetValue(cacheKey)
+	if err != nil {
+		fmt.Println("Cannot get question from cache")
+	}
+	if cacheQuestion != "" {
+		cacheQuestionParsed := utils.JSONParse(cacheQuestion)
+		c.JSON(http.StatusOK, utils.SuccessfulResponse(cacheQuestionParsed, "Successfully get question from cache"))
+		return
+	}
 
-	//** Get a lesson with dictionary populated **//
 	var lookupDictionaries = bson.M{
 		"$lookup": bson.M{
 			"from":         "dictionaries",
@@ -150,6 +162,7 @@ func (qs *QuizServices) GetAQuiz(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.SetValue(cacheKey, utils.JSONStringify(quiz[0]))
 	responseMessage := "Successfully get a question"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(quiz[0], responseMessage))
@@ -182,6 +195,7 @@ func (qs *QuizServices) CreateAQuiz(c *gin.Context) {
 	}
 	fmt.Println(updateDictionary.MatchedCount)
 
+	transport.Redis.DeleteValue(utils.CacheConstant.Questions)
 	responseMessage := "Successfully create a question"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "question": quiz}, responseMessage))
@@ -219,6 +233,7 @@ func (qs *QuizServices) UpdateAQuiz(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.DeleteValue(utils.CacheConstant.Question + ":" + param)
 	responseMessage := "Successfully update a question"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "question": quiz}, responseMessage))
@@ -254,6 +269,8 @@ func (qs *QuizServices) DeleteAQuiz(c *gin.Context) {
 		return
 	}
 
+	transport.Redis.DeleteValue(utils.CacheConstant.Questions)
+	transport.Redis.DeleteValue(utils.CacheConstant.Question + ":" + param)
 	responseMessage := "Successfully delete a question"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
