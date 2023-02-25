@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
@@ -28,28 +29,26 @@ func (ds *DictionaryServices) GetDictionaries(c *gin.Context) {
 		! Example of the result of the aggregation
 		TODO https://vidler.app/blog/data/populate-golang-relationship-field-using-mongodb-aggregate-and-lookup/
 	*/
-	var lookupLesson = bson.M{"$lookup": bson.M{
-		"from":         "lessons",       //** collection name **//
-		"localField":   "_id",           //** field in the input documents **//
-		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
-		"as":           "lessons",       //** output array field **//
-	}}
-	var lookupQuizzes = bson.M{"$lookup": bson.M{
-		"from":         "questions",     //** collection name **//
-		"localField":   "_id",           //** field in the input documents **//
-		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
-		"as":           "questions",     //** output array field **//
-	}}
-	var projectQuizzes = bson.M{"$project": bson.M{
-		"questions": bson.M{
-			"options": 0,
-		},
+	// var lookupQuizzes = bson.M{"$lookup": bson.M{
+	// 	"from":         "questions",     //** collection name **//
+	// 	"localField":   "_id",           //** field in the input documents **//
+	// 	"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
+	// 	"as":           "questions",     //** output array field **//
+	// }}
+	// var projectQuizzes = bson.M{"$project": bson.M{
+	// 	"questions": bson.M{
+	// 		"options": 0,
+	// 	},
+	// 	"description": 0,
+	// }}
+	var projectDictionaries = bson.M{"$project": bson.M{
+		"description": 0,
 	}}
 
 	cursor, err := GetDictionaryCollection(ds).Aggregate(context.TODO(), []bson.M{
-		lookupLesson,
-		lookupQuizzes,
-		projectQuizzes,
+		projectDictionaries,
+		// lookupQuizzes,
+		// projectQuizzes,
 	})
 
 	if err != nil {
@@ -82,28 +81,23 @@ func (ds *DictionaryServices) GetADictionary(c *gin.Context) {
 
 	// get the dictionary with the lessons and quizzes inside it
 	var match = bson.M{"$match": filter}
-	var lookupLesson = bson.M{"$lookup": bson.M{
-		"from":         "lessons",       //** collection name **//
-		"localField":   "_id",           //** field in the input documents **//
-		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
-		"as":           "lessons",       //** output array field **//
-	}}
-	var lookupQuizzes = bson.M{"$lookup": bson.M{
-		"from":         "questions",     //** collection name **//
-		"localField":   "_id",           //** field in the input documents **//
-		"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
-		"as":           "questions",     //** output array field **//
-	}}
-	var project = bson.M{"$project": bson.M{
-		"questions": bson.M{
-			"options": 0,
-		},
-	}}
+	// var lookupQuizzes = bson.M{"$lookup": bson.M{
+	// 	"from":         "questions",     //** collection name **//
+	// 	"localField":   "_id",           //** field in the input documents **//
+	// 	"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
+	// 	"as":           "questions",     //** output array field **//
+	// }}
+	// var project = bson.M{"$project": bson.M{
+	// 	"questions": bson.M{
+	// 		"options": 0,
+	// 		"title":   0,
+	// 		"point":   0,
+	// 	},
+	// }}
 	cursor, err := GetDictionaryCollection(ds).Aggregate(context.TODO(), []bson.M{
 		match,
-		lookupLesson,
-		lookupQuizzes,
-		project,
+		// lookupQuizzes,
+		// project,
 	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
@@ -127,7 +121,6 @@ func (ds *DictionaryServices) CreateADictionary(c *gin.Context) {
 		return
 	}
 	dictionary.ID = primitive.NewObjectID()
-	dictionary.Lessons = []model.Lesson{}
 	dictionary.Questions = []model.Question{}
 
 	result, err := GetDictionaryCollection(ds).InsertOne(ctx, dictionary)
@@ -155,6 +148,7 @@ func (ds *DictionaryServices) UpdateADictionary(c *gin.Context) {
 
 	err = GetDictionaryCollection(ds).FindOne(ctx, filter).Decode(&dictionary)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -162,6 +156,8 @@ func (ds *DictionaryServices) UpdateADictionary(c *gin.Context) {
 	if err := c.ShouldBindJSON(&dictionary); err != nil {
 		return
 	}
+
+	fmt.Println(dictionary)
 
 	update := bson.M{"$set": dictionary}
 

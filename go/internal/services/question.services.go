@@ -54,8 +54,9 @@ func (qs *QuizServices) GetQuizzes(c *gin.Context) {
 	var projectDictionaries = bson.M{
 		"$project": bson.M{
 			"dictionaries": bson.M{
-				"questions": 0,
-				"lessons":   0,
+				"display_image":     0,
+				"description":       0,
+				"short_description": 0,
 			},
 		},
 	}
@@ -125,8 +126,9 @@ func (qs *QuizServices) GetAQuiz(c *gin.Context) {
 	var project = bson.M{
 		"$project": bson.M{
 			"dictionaries": bson.M{
-				"lessons":   0,
-				"questions": 0,
+				"display_image":     0,
+				"description":       0,
+				"short_description": 0,
 			},
 		},
 	}
@@ -174,13 +176,13 @@ func (qs *QuizServices) CreateAQuiz(c *gin.Context) {
 		return
 	}
 
-	filter := bson.M{"_id": quiz.DictionaryID}
+	// filter := bson.M{"_id": quiz.DictionaryID}
 
-	updateDictionary, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"questions": quiz.ID}})
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(updateDictionary.MatchedCount)
+	// updateDictionary, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.DictionaryCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"questions": quiz.ID}})
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(updateDictionary.MatchedCount)
 
 	responseMessage := "Successfully create a question"
 

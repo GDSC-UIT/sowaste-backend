@@ -23,7 +23,14 @@ func GetArticleCollection(as *ArticleServices) *mongo.Collection {
 func (as *ArticleServices) GetArticles(c *gin.Context) {
 	ctx := c.Request.Context()
 	var articles []model.Article
-	cursor, err := GetArticleCollection(as).Find(context.TODO(), bson.M{})
+	var projectArticles = bson.M{
+		"$project": bson.M{
+			"description": 0,
+		},
+	}
+	cursor, err := GetArticleCollection(as).Aggregate(context.TODO(), []bson.M{
+		projectArticles,
+	})
 
 	if err != nil {
 		panic(err)

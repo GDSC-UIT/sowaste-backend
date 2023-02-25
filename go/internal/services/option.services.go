@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
@@ -89,13 +88,13 @@ func (qs *QuestionServices) CreateAQuestion(c *gin.Context) {
 		return
 	}
 
-	filter := bson.M{"_id": question.QuestionID}
+	// filter := bson.M{"_id": question.QuestionID}
 
-	updateQuiz, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"options": question.ID}})
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(updateQuiz.MatchedCount)
+	// updateQuiz, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, qs.Db).UpdateOne(ctx, filter, bson.M{"$push": bson.M{"options": question.ID}})
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(updateQuiz.MatchedCount)
 
 	responseMessage := "Successfully create a question"
 
@@ -150,12 +149,12 @@ func (qs *QuestionServices) DeleteAQuestion(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	pull := bson.M{"$pull": bson.M{"options": id}}
-	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, qs.Db).UpdateOne(ctx, filter, pull)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	// pull := bson.M{"$pull": bson.M{"options": id}}
+	// _, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, qs.Db).UpdateOne(ctx, filter, pull)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// 	return
+	// }
 
 	result, err := GetQuestionCollection(qs).DeleteOne(ctx, filter)
 
