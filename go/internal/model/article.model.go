@@ -9,5 +9,4 @@ type Article struct {
 	ShortDescription string             `bson:"short_description" json:"short_description"`
 	Source           string             `bson:"source" json:"source"`
 	CreatedAt        primitive.DateTime `bson:"created_at" json:"created_at"`
-	DisplayImage     string             `bson:"display_image" json:"display_image"`
 }
