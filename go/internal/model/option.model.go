@@ -7,5 +7,5 @@ type Option struct {
 	Description  string             `bson:"description,omitempty" json:"description,omitempty"` //* question *//
 	QuestionID   primitive.ObjectID `bson:"question_id" json:"question_id"`
 	DictionaryID primitive.ObjectID `bson:"dictionary_id" json:"dictionary_id"`
-	IsCorrect    bool               `bson:"is_correct,omitempty" json:"is_correct,omitempty"`
+	IsCorrect    bool               `bson:"is_correct" json:"is_correct"`
 }
