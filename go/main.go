@@ -5,11 +5,13 @@ import (
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/config"
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/database"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func init() {
 	//** load .env file anywhere from any directory **//
-	config.LoadEnv()
+	// config.LoadEnv()
+	godotenv.Load()
 }
 
 func main() {
