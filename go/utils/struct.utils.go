@@ -6,15 +6,18 @@ type Response struct {
 }
 
 type DbCollectionConstants struct {
-	DictionaryCollection string
-	LessonCollection     string
-	QuestionCollection   string
-	OptionCollection     string
-	BottleShopCollection string
-	ArticleCollection    string
-	CategoryCollection   string
-	UserCollection       string
-	SavedCollection      string
-	DIYCollection        string
-	RewardCollection     string
+	DictionaryCollection       string
+	QuestionCollection         string
+	OptionCollection           string
+	ArticleCollection          string
+	CategoryCollection         string
+	UserCollection             string
+	SavedCollection            string
+	DIYCollection              string
+	RewardCollection           string
+	BadgeCollection            string
+	Badge_CollectionCollection string
+	QuestionResultCollection   string
+	QuizResultCollection       string
+	ExchangedCollection        string
 }

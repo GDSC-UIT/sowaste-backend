@@ -20,8 +20,13 @@ func main() {
 	database.Client.ConnectDb()
 	defer database.Client.DisconnetDb()
 
+	firebaseAuth := config.SetupFirebase()
+
 	//** API connect (router) **/
 	api.Init()
+	api.Router.Current.Use(func(ctx *gin.Context) {
+		ctx.Set("firebaseAuth", firebaseAuth)
+	})
 	api.Router.RoutersEstablishment()
 	api.Router.Current.LoadHTMLGlob("docs/*.html")
 	api.Router.Current.GET("/", func(ctx *gin.Context) {

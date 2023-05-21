@@ -197,22 +197,6 @@ func (ds *DictionaryServices) DeleteADictionary(c *gin.Context) {
 		return
 	}
 
-	// delete the lesson in the dictionary
-	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.LessonCollection, ds.Db).DeleteMany(ctx, deleteFilter)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
-	// delete the quiz of the dictionary
-	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.QuestionCollection, ds.Db).DeleteMany(ctx, deleteFilter)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
 	// delete the dictionary
 	_, err = GetDictionaryCollection(ds).DeleteOne(ctx, filter)
 	if err != nil {

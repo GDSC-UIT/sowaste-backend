@@ -21,7 +21,7 @@ func Init() {
 }
 
 func (gr *GinRouter) RoutersEstablishment() {
-	Router.Current.Use(transport.Recover(database.Client)).Use(transport.Cors)
+	Router.Current.Use(transport.Recover(database.Client)).Use(transport.Cors).Use(transport.AuthMiddleware)
 	apiRouter := Router.Current.Group("/api")
 
 	/*
@@ -44,9 +44,16 @@ func (gr *GinRouter) RoutersEstablishment() {
 	routes.DictonaryRoutes(apiRouter, database.Client.Source)
 	routes.QuizRoutes(apiRouter, database.Client.Source)
 	routes.QuestionRoutes(apiRouter, database.Client.Source)
-	routes.BottleShopRoutes(apiRouter, database.Client.Source)
 	routes.ArticleRoutes(apiRouter, database.Client.Source)
 	routes.CategoryRoutes(apiRouter, database.Client.Source)
+	routes.SavedRoutes(apiRouter, database.Client.Source)
+	routes.ExchangedRoutes(apiRouter, database.Client.Source)
+	routes.QuizResultRoutes(apiRouter, database.Client.Source)
+	routes.BadgeRoutes(apiRouter, database.Client.Source)
+	routes.BadgeCollectionRoutes(apiRouter, database.Client.Source)
+	routes.DIYRoutes(apiRouter, database.Client.Source)
+	routes.UserRoutes(apiRouter, database.Client.Source)
+	routes.RewardRoutes(apiRouter, database.Client.Source)
 }
 
 func (gr *GinRouter) Run() {

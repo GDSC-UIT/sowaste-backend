@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
@@ -20,32 +19,7 @@ func GetUserCollection(as *UserServices) *mongo.Collection {
 	return utils.GetDatabaseCollection(utils.DbCollectionConstant.UserCollection, as.Db)
 }
 
-func (as *UserServices) GetArticles(c *gin.Context) {
-	ctx := c.Request.Context()
-	var articles []model.Article
-	var projectArticles = bson.M{
-		"$project": bson.M{
-			"description": 0,
-		},
-	}
-	cursor, err := GetUserCollection(as).Aggregate(context.TODO(), []bson.M{
-		projectArticles,
-	})
-
-	if err != nil {
-		panic(err)
-	}
-	if err = cursor.All(ctx, &articles); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
-	responseMessage := "Successfully get all articles"
-
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(articles, responseMessage))
-}
-
-func (as *UserServices) GetAnArticle(c *gin.Context) {
+func (as *UserServices) GetUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	//** Get param of the request uri **//
 	param := c.Param("id")
@@ -58,43 +32,42 @@ func (as *UserServices) GetAnArticle(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	var article model.Article
+	var user model.User
 
-	err = GetUserCollection(as).FindOne(ctx, filter).Decode(&article)
+	err = GetUserCollection(as).FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	responseMessage := "Successfully get an article"
+	responseMessage := "Successfully get a user"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(article, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(user, responseMessage))
 }
 
-func (as *UserServices) CreateArticle(c *gin.Context) {
+func (as *UserServices) CreateUser(c *gin.Context) {
 	ctx := c.Request.Context()
-	var article model.Article
+	var user model.User
 
-	if err := c.ShouldBindJSON(&article); err != nil {
+	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	article.ID = primitive.NewObjectID()
-	article.CreatedAt = utils.GetCurrentTime()
+	user.ID = primitive.NewObjectID()
 
-	result, err := GetUserCollection(as).InsertOne(ctx, article)
+	result, err := GetUserCollection(as).InsertOne(ctx, user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	responseMessage := "Successfully create an article"
+	responseMessage := "Successfully create a user"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "article": article}, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "user": user}, responseMessage))
 }
 
-func (as *UserServices) UpdateArticle(c *gin.Context) {
+func (as *UserServices) UpdateUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)
@@ -105,19 +78,19 @@ func (as *UserServices) UpdateArticle(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	var article model.Article
+	var user model.User
 
-	err = GetUserCollection(as).FindOne(ctx, filter).Decode(&article)
+	err = GetUserCollection(as).FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	if err := c.ShouldBindJSON(&article); err != nil {
+	if err := c.ShouldBindJSON(&user); err != nil {
 		return
 	}
 
-	update := bson.M{"$set": article}
+	update := bson.M{"$set": user}
 
 	result, err := GetUserCollection(as).UpdateOne(ctx, filter, update)
 
@@ -126,12 +99,12 @@ func (as *UserServices) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	responseMessage := "Successfully update an article"
+	responseMessage := "Successfully update an user"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "article": article}, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "user": user}, responseMessage))
 }
 
-func (as *UserServices) DeleteArticle(c *gin.Context) {
+func (as *UserServices) DeleteUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)
@@ -149,7 +122,7 @@ func (as *UserServices) DeleteArticle(c *gin.Context) {
 		return
 	}
 
-	responseMessage := "Successfully delete an article"
+	responseMessage := "Successfully delete a user"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
 }

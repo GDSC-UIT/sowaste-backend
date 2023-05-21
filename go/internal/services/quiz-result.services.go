@@ -13,17 +13,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type SavedServices struct {
+type QuizResultServices struct {
 	Db *mongo.Client
 }
 
-func GetSavedCollection(ss *SavedServices) *mongo.Collection {
-	return utils.GetDatabaseCollection(utils.DbCollectionConstant.SavedCollection, ss.Db)
+func GetQuizResultCollection(qs *QuizResultServices) *mongo.Collection {
+	return utils.GetDatabaseCollection(utils.DbCollectionConstant.QuizResultCollection, qs.Db)
 }
 
-func (ss *SavedServices) GetSaveds(c *gin.Context) {
+func (qs *QuizResultServices) GetQuizResults(c *gin.Context) {
 	ctx := c.Request.Context()
-	var saved []model.Saved
+	var quizResult []model.QuizResult
 
 	var lookupDictionaries = bson.M{
 		"$lookup": bson.M{
@@ -60,7 +60,7 @@ func (ss *SavedServices) GetSaveds(c *gin.Context) {
 		},
 	}
 
-	cursor, err := GetSavedCollection(ss).Aggregate(context.TODO(), []bson.M{
+	cursor, err := GetQuizResultCollection(qs).Aggregate(context.TODO(), []bson.M{
 		lookupUser,
 		lookupDictionaries,
 		projectDictionaries,
@@ -72,17 +72,17 @@ func (ss *SavedServices) GetSaveds(c *gin.Context) {
 		panic(err)
 	}
 
-	if err = cursor.All(ctx, &saved); err != nil {
+	if err = cursor.All(ctx, &quizResult); err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	responseMessage := "Successfully get all saveds"
+	responseMessage := "Successfully get all quiz results"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(saved, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(quizResult, responseMessage))
 }
 
-func (ss *SavedServices) GetASaved(c *gin.Context) {
+func (qs *QuizResultServices) GetAQuizResult(c *gin.Context) {
 	ctx := c.Request.Context()
 	//** Get param of the request uri **//
 	param := c.Param("id")
@@ -95,7 +95,7 @@ func (ss *SavedServices) GetASaved(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	var saved []model.Saved
+	var quizResult []model.QuizResult
 
 	//** Get a lesson with dictionary populated **//
 	var lookupDictionaries = bson.M{
@@ -126,7 +126,7 @@ func (ss *SavedServices) GetASaved(c *gin.Context) {
 	var match = bson.M{
 		"$match": filter,
 	}
-	cursor, err := GetSavedCollection(ss).Aggregate(ctx, []bson.M{
+	cursor, err := GetQuizResultCollection(qs).Aggregate(ctx, []bson.M{
 		lookupDictionaries,
 		lookupUser,
 		project,
@@ -137,18 +137,18 @@ func (ss *SavedServices) GetASaved(c *gin.Context) {
 		panic(err)
 	}
 
-	if err = cursor.All(ctx, &saved); err != nil {
+	if err = cursor.All(ctx, &quizResult); err != nil {
 		fmt.Println(err.Error())
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	responseMessage := "Successfully get a saved"
+	responseMessage := "Successfully get a quiz result"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(saved[0], responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(quizResult[0], responseMessage))
 }
 
-func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
+func (qs *QuizResultServices) GetQuizResultsByUserId(c *gin.Context) {
 	ctx := c.Request.Context()
 	//** Get param of the request uri **//
 	param := c.Param("user_id")
@@ -161,9 +161,8 @@ func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
 
 	filter := bson.M{"user_id": id}
 
-	var saved []model.Saved
+	var quizResult []model.QuizResult
 
-	//** Get a lesson with dictionary populated **//
 	var lookupDictionaries = bson.M{
 		"$lookup": bson.M{
 			"from":         "dictionaries",
@@ -192,7 +191,7 @@ func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
 	var match = bson.M{
 		"$match": filter,
 	}
-	cursor, err := GetSavedCollection(ss).Aggregate(ctx, []bson.M{
+	cursor, err := GetQuizResultCollection(qs).Aggregate(ctx, []bson.M{
 		lookupDictionaries,
 		lookupUser,
 		project,
@@ -203,45 +202,45 @@ func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
 		panic(err)
 	}
 
-	if err = cursor.All(ctx, &saved); err != nil {
+	if err = cursor.All(ctx, &quizResult); err != nil {
 		fmt.Println(err.Error())
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	responseMessage := "Successfully get saveds by user id " + param
+	responseMessage := "Successfully get quiz results by user id"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(saved, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(quizResult, responseMessage))
 }
 
-func (ss *SavedServices) CreateASaved(c *gin.Context) {
+func (qs *QuizResultServices) CreateAQuizResult(c *gin.Context) {
 	ctx := c.Request.Context()
-	var saved model.Saved
-	if err := c.ShouldBindJSON(&saved); err != nil {
+	var quizResult model.QuizResult
+	if err := c.ShouldBindJSON(&quizResult); err != nil {
 		return
 	}
-	if saved.DictionaryID == primitive.NilObjectID {
+	if quizResult.DictionaryID == primitive.NilObjectID {
 		c.JSON(http.StatusBadRequest, "Dictionary id is required")
 		return
 	}
-	if saved.UserID == primitive.NilObjectID {
+	if quizResult.UserID == primitive.NilObjectID {
 		c.JSON(http.StatusBadRequest, "User id is required")
 		return
 	}
-	saved.ID = primitive.NewObjectID()
-	//** Insert a saved to the database **//
-	result, err := GetSavedCollection(ss).InsertOne(ctx, saved)
+	quizResult.ID = primitive.NewObjectID()
+	//** Insert a quizResult to the database **//
+	result, err := GetQuizResultCollection(qs).InsertOne(ctx, quizResult)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	responseMessage := "Successfully create a saved"
+	responseMessage := "Successfully create a quiz result"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "saved": saved}, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "quiz_result": quizResult}, responseMessage))
 }
 
-func (ss *SavedServices) UpdateASaved(c *gin.Context) {
+func (qs *QuizResultServices) UpdateAQuizResult(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)
@@ -252,33 +251,33 @@ func (ss *SavedServices) UpdateASaved(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	var saved model.Saved
+	var quizResult model.QuizResult
 
-	err = GetSavedCollection(ss).FindOne(ctx, filter).Decode(&saved)
+	err = GetQuizResultCollection(qs).FindOne(ctx, filter).Decode(&quizResult)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	if err := c.ShouldBindJSON(&saved); err != nil {
+	if err := c.ShouldBindJSON(&quizResult); err != nil {
 		return
 	}
 
-	update := bson.M{"$set": saved}
+	update := bson.M{"$set": quizResult}
 
-	result, err := GetSavedCollection(ss).UpdateOne(ctx, filter, update)
+	result, err := GetQuizResultCollection(qs).UpdateOne(ctx, filter, update)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	responseMessage := "Successfully update a saved"
+	responseMessage := "Successfully update a quiz result"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "saved": saved}, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "quiz_result": quizResult}, responseMessage))
 }
 
-func (ss *SavedServices) DeleteASaved(c *gin.Context) {
+func (qs *QuizResultServices) DeleteAQuizResult(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)
@@ -289,38 +288,14 @@ func (ss *SavedServices) DeleteASaved(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
-	result, err := GetSavedCollection(ss).DeleteOne(ctx, filter)
+	result, err := GetQuizResultCollection(qs).DeleteOne(ctx, filter)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	responseMessage := "Successfully delete a saved"
-
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
-
-}
-
-func (ss *SavedServices) DeleteASavedByDictionaryId(c *gin.Context) {
-	ctx := c.Request.Context()
-	param := c.Param("dictionary_id")
-	id, err := primitive.ObjectIDFromHex(param)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, nil)
-		return
-	}
-
-	filter := bson.M{"dictionary_id": id}
-
-	result, err := GetSavedCollection(ss).DeleteOne(ctx, filter)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
-	responseMessage := "Successfully delete saveds by dictionary_id " + param
+	responseMessage := "Successfully delete a quiz result"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
 

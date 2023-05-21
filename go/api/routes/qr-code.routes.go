@@ -2,6 +2,7 @@ package routes
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/utils"
@@ -28,7 +29,7 @@ func GenerateQRCode(group *gin.RouterGroup) {
 				ctx.JSON(http.StatusBadRequest, utils.FailedResponse("no access_token provided"))
 				return
 			}
-			var r = redirect_url + "&reward_point=" + point + "&access_token=" + access_token
+			var r = redirect_url + "&point=" + point + "&access_token=" + access_token
 			response, err := http.Get("https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=" + r)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, utils.FailedResponse("Error while generating QR code"))
@@ -37,7 +38,7 @@ func GenerateQRCode(group *gin.RouterGroup) {
 				ctx.Writer.Header().Set("Content-Type", "image/png")
 				body, err := ioutil.ReadAll(response.Body)
 				if err != nil {
-					//   log.Fatalln(err)
+					log.Fatalln(err)
 				}
 				ctx.Writer.Write(body)
 
