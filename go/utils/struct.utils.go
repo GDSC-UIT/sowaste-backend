@@ -12,4 +12,5 @@ type DbCollectionConstants struct {
 	OptionCollection     string
 	BottleShopCollection string
 	ArticleCollection    string
+	CategoryCollection   string
 }
