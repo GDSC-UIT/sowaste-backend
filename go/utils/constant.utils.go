@@ -8,4 +8,8 @@ var DbCollectionConstant = DbCollectionConstants{
 	OptionCollection:     "options",
 	ArticleCollection:    "articles",
 	CategoryCollection:   "categories",
+	UserCollection:       "users",
+	SavedCollection:      "saved",
+	DIYCollection:        "diy",
+	RewardCollection:     "rewards",
 }

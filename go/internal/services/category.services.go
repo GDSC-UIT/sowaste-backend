@@ -12,15 +12,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type CategoryService struct {
+type CategoryServices struct {
 	Db *mongo.Client
 }
 
-func GetCategoryCollection(cs *CategoryService) *mongo.Collection {
+func GetCategoryCollection(cs *CategoryServices) *mongo.Collection {
 	return utils.GetDatabaseCollection(utils.DbCollectionConstant.CategoryCollection, cs.Db)
 }
 
-func (cs *CategoryService) GetCategories(c *gin.Context) {
+func (cs *CategoryServices) GetCategories(c *gin.Context) {
 	ctx := c.Request.Context()
 	var categories []model.Category
 
@@ -39,7 +39,7 @@ func (cs *CategoryService) GetCategories(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(categories, responseMessage))
 }
 
-func (cs *CategoryService) GetAnCategory(c *gin.Context) {
+func (cs *CategoryServices) GetAnCategory(c *gin.Context) {
 	ctx := c.Request.Context()
 	//** Get param of the request uri **//
 	param := c.Param("id")
@@ -65,7 +65,7 @@ func (cs *CategoryService) GetAnCategory(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(category, responseMessage))
 }
 
-func (cs *CategoryService) CreateCategory(c *gin.Context) {
+func (cs *CategoryServices) CreateCategory(c *gin.Context) {
 	ctx := c.Request.Context()
 	var category model.Category
 
@@ -92,7 +92,7 @@ func (cs *CategoryService) CreateCategory(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "category": category}, responseMessage))
 }
 
-func (cs *CategoryService) UpdateCategory(c *gin.Context) {
+func (cs *CategoryServices) UpdateCategory(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)
@@ -129,7 +129,7 @@ func (cs *CategoryService) UpdateCategory(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "category": category}, responseMessage))
 }
 
-func (cs *CategoryService) DeleteCategory(c *gin.Context) {
+func (cs *CategoryServices) DeleteCategory(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
 	id, err := primitive.ObjectIDFromHex(param)
