@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -39,6 +40,8 @@ func Cors(c *gin.Context) {
 // AuthMiddleware : to verify all authorized operations
 func AuthMiddleware(c *gin.Context) {
 	firebaseAuth := c.MustGet("firebaseAuth").(*auth.Client)
+	var temp *auth.FirebaseInfo
+	print(temp.Identities)
 	authorizationToken := c.GetHeader("Authorization")
 	idToken := strings.TrimSpace(strings.Replace(authorizationToken, "Bearer", "", 1))
 	if idToken == "" {
@@ -48,6 +51,7 @@ func AuthMiddleware(c *gin.Context) {
 	}
 	//verify token
 	token, err := firebaseAuth.VerifyIDToken(context.Background(), idToken)
+	fmt.Println(err.Error())
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid token"})
 		c.Abort()

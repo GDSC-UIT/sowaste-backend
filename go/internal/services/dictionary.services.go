@@ -121,7 +121,7 @@ func (ds *DictionaryServices) CreateADictionary(c *gin.Context) {
 		return
 	}
 	dictionary.ID = primitive.NewObjectID()
-	dictionary.Questions = []model.Question{}
+	// dictionary.Questions = []model.Question{}
 
 	result, err := GetDictionaryCollection(ds).InsertOne(ctx, dictionary)
 	if err != nil {
