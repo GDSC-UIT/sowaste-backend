@@ -22,5 +22,6 @@ func UserRoutes(group *gin.RouterGroup, db *mongo.Client) {
 		users.POST("", handler.CreateAUser)
 		users.PUT("/:id", handler.UpdateAUser)
 		users.DELETE("/:id", handler.DeleteAUser)
+		users.PUT("/point", handler.UpdateCurrentUserPoint)
 	}
 }

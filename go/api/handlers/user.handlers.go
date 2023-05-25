@@ -32,3 +32,7 @@ func (uh *UserHandlers) UpdateAUser(c *gin.Context) {
 func (uh *UserHandlers) DeleteAUser(c *gin.Context) {
 	uh.Handler.DeleteUser(c)
 }
+
+func (uh *UserHandlers) UpdateCurrentUserPoint(c *gin.Context) {
+	uh.Handler.UpdateCurrentUserPoint(c)
+}
