@@ -23,10 +23,7 @@ func GetRewardCollection(as *RewardServices) *mongo.Collection {
 func (as *RewardServices) GetRewards(c *gin.Context) {
 	ctx := c.Request.Context()
 	var rewards []model.Reward
-	var projectRewards = bson.M{}
-	cursor, err := GetRewardCollection(as).Aggregate(context.TODO(), []bson.M{
-		projectRewards,
-	})
+	cursor, err := GetRewardCollection(as).Find(context.TODO(), bson.M{})
 
 	if err != nil {
 		panic(err)
