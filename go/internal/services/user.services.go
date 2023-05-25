@@ -173,7 +173,15 @@ func (us *UserServices) UpdateCurrentUserPoint(c *gin.Context) {
 	ctx := c.Request.Context()
 	user := GetCurrentUser(c)
 	point := c.Query("point")
+	if point == "" {
+		c.JSON(http.StatusBadRequest, "Point is required")
+		return
+	}
 	action := c.Query("action")
+	if action == "" {
+		c.JSON(http.StatusBadRequest, "Action is required")
+		return
+	}
 	pointInt, err := strconv.Atoi(point)
 
 	if err != nil {
@@ -205,6 +213,71 @@ func (us *UserServices) UpdateCurrentUserPoint(c *gin.Context) {
 	responseMessage := "Successfully " + action + " point for user " + user.FullName
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "user": user}, responseMessage))
+}
+
+func (us *UserServices) CreateCurrentUserExchanges(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := GetCurrentUser(c)
+
+	rewardId := c.Query("reward_id")
+
+	if rewardId == "" {
+		c.JSON(http.StatusBadRequest, "Reward id is required")
+		return
+	}
+
+	var exchange model.Exchanged
+
+	exchange.ID = primitive.NewObjectID()
+	rewardIdObject, err := primitive.ObjectIDFromHex(rewardId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	exchange.RewardID = rewardIdObject
+
+	var reward model.Reward
+
+	filter := bson.M{"_id": rewardIdObject}
+
+	err = utils.GetDatabaseCollection(utils.DbCollectionConstant.RewardCollection, us.Db).FindOne(ctx, filter).Decode(&reward)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if reward.Point > user.RewardPoint {
+		c.JSON(http.StatusBadRequest, "Not enough point")
+		return
+	}
+
+	user.RewardPoint = user.RewardPoint - reward.Point
+
+	filter = bson.M{"_id": user.ID}
+
+	update := bson.M{"$set": user}
+
+	newUser, err := GetUserCollection(us).UpdateOne(ctx, filter, update)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "Error while update user point")
+		return
+	}
+
+	exchange.UserID = user.UID
+
+	result, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.ExchangedCollection, us.Db).InsertOne(ctx, exchange)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	responseMessage := "Successfully create an exchange"
+
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "exchange": exchange, "user": newUser}, responseMessage))
+
 }
 
 func GetCurrentUser(c *gin.Context) model.User {
