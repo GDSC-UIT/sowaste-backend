@@ -18,6 +18,7 @@ func RewardRoutes(group *gin.RouterGroup, db *mongo.Client) {
 	{
 		rewards.GET("", handler.GetRewards)
 		rewards.GET("/:id", handler.GetAReward)
+		rewards.GET("/user", handler.GetUserRewards)
 		rewards.POST("", handler.CreateAReward)
 		rewards.PUT("/:id", handler.UpdateAReward)
 		rewards.DELETE("/:id", handler.DeleteAReward)

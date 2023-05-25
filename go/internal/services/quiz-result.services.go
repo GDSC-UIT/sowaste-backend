@@ -36,7 +36,7 @@ func (qs *QuizResultServices) GetQuizResults(c *gin.Context) {
 	var lookupUser = bson.M{
 		"$lookup": bson.M{
 			"from":         "users",
-			"localField":   "user_id",
+			"localField":   "uid",
 			"foreignField": "_id",
 			"as":           "user",
 		},
@@ -109,7 +109,7 @@ func (qs *QuizResultServices) GetAQuizResult(c *gin.Context) {
 	var lookupUser = bson.M{
 		"$lookup": bson.M{
 			"from":         "users",
-			"localField":   "user_id",
+			"localField":   "uid",
 			"foreignField": "_id",
 			"as":           "user",
 		},
@@ -151,7 +151,7 @@ func (qs *QuizResultServices) GetAQuizResult(c *gin.Context) {
 func (qs *QuizResultServices) GetQuizResultsByUserId(c *gin.Context) {
 	ctx := c.Request.Context()
 	//** Get param of the request uri **//
-	param := c.Param("user_id")
+	param := c.Param("uid")
 	//** Convert id to mongodb object id **//
 	id, err := primitive.ObjectIDFromHex(param)
 	if err != nil {
@@ -159,7 +159,7 @@ func (qs *QuizResultServices) GetQuizResultsByUserId(c *gin.Context) {
 		return
 	}
 
-	filter := bson.M{"user_id": id}
+	filter := bson.M{"uid": id}
 
 	var quizResult []model.QuizResult
 
@@ -174,7 +174,7 @@ func (qs *QuizResultServices) GetQuizResultsByUserId(c *gin.Context) {
 	var lookupUser = bson.M{
 		"$lookup": bson.M{
 			"from":         "users",
-			"localField":   "user_id",
+			"localField":   "uid",
 			"foreignField": "_id",
 			"as":           "user",
 		},
@@ -223,12 +223,12 @@ func (qs *QuizResultServices) CreateAQuizResult(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "Dictionary id is required")
 		return
 	}
-	if quizResult.UserID == primitive.NilObjectID {
-		c.JSON(http.StatusBadRequest, "User id is required")
-		return
-	}
+
+	user := GetCurrentUser(c)
+
+	quizResult.UserID = user.UID
 	quizResult.ID = primitive.NewObjectID()
-	//** Insert a quizResult to the database **//
+
 	result, err := GetQuizResultCollection(qs).InsertOne(ctx, quizResult)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)

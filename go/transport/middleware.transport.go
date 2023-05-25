@@ -1,15 +1,12 @@
 package transport
 
 import (
-	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/database"
+	"github.com/GDSC-UIT/sowaste-backend/go/utils"
 	"github.com/gin-gonic/gin"
-
-	"firebase.google.com/go/auth"
 )
 
 func Recover(sc database.Instance) gin.HandlerFunc {
@@ -38,25 +35,22 @@ func Cors(c *gin.Context) {
 }
 
 // AuthMiddleware : to verify all authorized operations
+
 func AuthMiddleware(c *gin.Context) {
-	firebaseAuth := c.MustGet("firebaseAuth").(*auth.Client)
-	var temp *auth.FirebaseInfo
-	print(temp.Identities)
 	authorizationToken := c.GetHeader("Authorization")
 	idToken := strings.TrimSpace(strings.Replace(authorizationToken, "Bearer", "", 1))
 	if idToken == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Id token not available"})
+		c.JSON(http.StatusUnauthorized, utils.FailedResponse("Unauthorized"))
 		c.Abort()
 		return
 	}
-	//verify token
-	token, err := firebaseAuth.VerifyIDToken(context.Background(), idToken)
-	fmt.Println(err.Error())
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid token"})
+	claims, isValidate := utils.CheckJwtIsValidateAndGetJwtDecoded(idToken)
+	if !isValidate {
+		c.JSON(http.StatusUnauthorized, utils.FailedResponse("Unauthorized"))
 		c.Abort()
 		return
+	} else {
+		c.Set("CLAIMS", claims)
 	}
-	c.Set("UUID", token.UID)
 	c.Next()
 }

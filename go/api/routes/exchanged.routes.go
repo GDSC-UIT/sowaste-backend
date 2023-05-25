@@ -18,7 +18,8 @@ func ExchangedRoutes(group *gin.RouterGroup, db *mongo.Client) {
 	{
 		exchangeds.GET("", handler.GetExchanges)
 		exchangeds.GET("/:id", handler.GetAExchange)
-		exchangeds.GET("/user/:user_id", handler.GetExchangesByUserId)
+		exchangeds.GET("/user/:user_id", handler.GetExchangedsByUserId)
+		exchangeds.GET("/user", handler.GetCurrentUserExchangeds)
 		exchangeds.POST("", handler.CreateAExchange)
 		exchangeds.PUT("/:id", handler.UpdateAExchange)
 		exchangeds.DELETE("/:id", handler.DeleteAExchange)

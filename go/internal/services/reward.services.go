@@ -67,6 +67,34 @@ func (as *RewardServices) GetAReward(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(reward, responseMessage))
 }
 
+func (as *RewardServices) GetUserRewards(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	user := GetCurrentUser(c)
+
+	uid := user.UID
+
+	filter := bson.M{"uid": uid}
+
+	var rewards []model.Reward
+
+	cursor, err := GetRewardCollection(as).Find(ctx, filter)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if err = cursor.All(ctx, &rewards); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	responseMessage := "Successfully get user rewards with uid " + uid
+
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(rewards, responseMessage))
+}
+
 func (as *RewardServices) CreateReward(c *gin.Context) {
 	ctx := c.Request.Context()
 	var reward model.Reward

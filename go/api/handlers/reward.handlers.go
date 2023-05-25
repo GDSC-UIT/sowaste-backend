@@ -17,6 +17,10 @@ func (rh *RewardHandlers) GetAReward(c *gin.Context) {
 	rh.Handler.GetAReward(c)
 }
 
+func (rh *RewardHandlers) GetUserRewards(c *gin.Context) {
+	rh.Handler.GetUserRewards(c)
+}
+
 func (rh *RewardHandlers) CreateAReward(c *gin.Context) {
 	rh.Handler.CreateReward(c)
 }

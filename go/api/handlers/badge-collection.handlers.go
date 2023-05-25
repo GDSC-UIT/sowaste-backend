@@ -17,6 +17,10 @@ func (bch *BadgeCollectionHandlers) GetABadgeCollection(c *gin.Context) {
 	bch.Handler.GetABadgeCollection(c)
 }
 
+func (bch *BadgeCollectionHandlers) GetCurrentUserBadgeCollections(c *gin.Context) {
+	bch.Handler.GetCurrentUserBadgeCollection(c)
+}
+
 func (bch *BadgeCollectionHandlers) GetBadgeCollectionsByUserId(c *gin.Context) {
 	bch.Handler.GetBadgeCollectionByUserId(c)
 }

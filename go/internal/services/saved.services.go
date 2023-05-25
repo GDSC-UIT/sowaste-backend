@@ -36,7 +36,7 @@ func (ss *SavedServices) GetSaveds(c *gin.Context) {
 	var lookupUser = bson.M{
 		"$lookup": bson.M{
 			"from":         "users",
-			"localField":   "user_id",
+			"localField":   "uid",
 			"foreignField": "_id",
 			"as":           "user",
 		},
@@ -109,7 +109,7 @@ func (ss *SavedServices) GetASaved(c *gin.Context) {
 	var lookupUser = bson.M{
 		"$lookup": bson.M{
 			"from":         "users",
-			"localField":   "user_id",
+			"localField":   "uid",
 			"foreignField": "_id",
 			"as":           "user",
 		},
@@ -151,7 +151,7 @@ func (ss *SavedServices) GetASaved(c *gin.Context) {
 func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
 	ctx := c.Request.Context()
 	//** Get param of the request uri **//
-	param := c.Param("user_id")
+	param := c.Param("uid")
 	//** Convert id to mongodb object id **//
 	id, err := primitive.ObjectIDFromHex(param)
 	if err != nil {
@@ -159,7 +159,7 @@ func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
 		return
 	}
 
-	filter := bson.M{"user_id": id}
+	filter := bson.M{"uid": id}
 
 	var saved []model.Saved
 
@@ -175,7 +175,7 @@ func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
 	var lookupUser = bson.M{
 		"$lookup": bson.M{
 			"from":         "users",
-			"localField":   "user_id",
+			"localField":   "uid",
 			"foreignField": "_id",
 			"as":           "user",
 		},
@@ -214,6 +214,84 @@ func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(saved, responseMessage))
 }
 
+func (ss *SavedServices) GetSavedsOfUser(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	user := GetCurrentUser(c)
+
+	var saved []model.Saved
+
+	filter := bson.M{"uid": user.UID}
+	cursor, err := GetSavedCollection(ss).Find(ctx, filter)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err = cursor.All(ctx, &saved); err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	responseMessage := "Successfully get saveds of user " + user.UID
+
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(saved, responseMessage))
+
+	// var saved []model.Saved
+
+	// //** Get a lesson with dictionary populated **//
+	// var lookupDictionaries = bson.M{
+	// 	"$lookup": bson.M{
+	// 		"from":         "dictionaries",
+	// 		"localField":   "dictionary_id",
+	// 		"foreignField": "_id",
+	// 		"as":           "dictionaries",
+	// 	},
+	// }
+	// var lookupUser = bson.M{
+	// 	"$lookup": bson.M{
+	// 		"from":         "users",
+	// 		"localField":   "uid",
+	// 		"foreignField": "_id",
+	// 		"as":           "user",
+	// 	},
+	// }
+	// var project = bson.M{
+	// 	"$project": bson.M{
+	// 		"dictionaries": bson.M{
+	// 			"display_image":     0,
+	// 			"description":       0,
+	// 			"short_description": 0,
+	// 		},
+	// 	},
+	// }
+	// var match = bson.M{
+	// 	"$match": filter,
+	// }
+	// cursor, err := GetSavedCollection(ss).Aggregate(ctx, []bson.M{
+	// 	lookupDictionaries,
+	// 	lookupUser,
+	// 	project,
+	// 	match,
+	// })
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// if err = cursor.All(ctx, &saved); err != nil {
+	// 	fmt.Println(err.Error())
+	// 	c.JSON(http.StatusBadRequest, err)
+	// 	return
+	// }
+
+	// responseMessage := "Successfully get saveds"
+
+	// c.JSON(http.StatusOK, utils.SuccessfulResponse(saved, responseMessage))
+}
+
 func (ss *SavedServices) CreateASaved(c *gin.Context) {
 	ctx := c.Request.Context()
 	var saved model.Saved
@@ -224,7 +302,7 @@ func (ss *SavedServices) CreateASaved(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "Dictionary id is required")
 		return
 	}
-	if saved.UserID == primitive.NilObjectID {
+	if saved.UserID == "" {
 		c.JSON(http.StatusBadRequest, "User id is required")
 		return
 	}

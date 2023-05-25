@@ -17,8 +17,12 @@ func (eh *ExchangedHandlers) GetAExchange(c *gin.Context) {
 	eh.Handler.GetAnExchanged(c)
 }
 
-func (eh *ExchangedHandlers) GetExchangesByUserId(c *gin.Context) {
+func (eh *ExchangedHandlers) GetExchangedsByUserId(c *gin.Context) {
 	eh.Handler.GetExchangedsByUserId(c)
+}
+
+func (eh *ExchangedHandlers) GetCurrentUserExchangeds(c *gin.Context) {
+	eh.Handler.GetCurrentUserExchangeds(c)
 }
 
 func (eh *ExchangedHandlers) CreateAExchange(c *gin.Context) {

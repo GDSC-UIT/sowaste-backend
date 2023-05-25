@@ -9,6 +9,7 @@ type Credential struct {
 
 type User struct {
 	ID           primitive.ObjectID `bson:"_id" json:"_id"`
+	UID          string             `bson:"uid,omitempty" json:"uid,omitempty"`
 	FullName     string             `bson:"full_name,omitempty" json:"full_name,omitempty"`
 	Email        string             `bson:"email,omitempty" json:"email,omitempty"` // primary key
 	Credential   Credential         `bson:"credential,omitempty" json:"credential,omitempty"`

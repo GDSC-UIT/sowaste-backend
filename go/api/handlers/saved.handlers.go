@@ -21,6 +21,10 @@ func (sh *SavedHandlers) GetSavedsByUserId(c *gin.Context) {
 	sh.Handler.GetSavedsByUserId(c)
 }
 
+func (sh *SavedHandlers) GetSavedsOfUser(c *gin.Context) {
+	sh.Handler.GetSavedsOfUser(c)
+}
+
 func (sh *SavedHandlers) CreateASaved(c *gin.Context) {
 	sh.Handler.CreateASaved(c)
 }

@@ -106,7 +106,7 @@ func (bs *BadgeCollectionServices) GetBadgeCollectionByUserId(c *gin.Context) {
 		return
 	}
 
-	filter := bson.M{"user_id": id}
+	filter := bson.M{"uid": id}
 
 	var lookupBadge = bson.M{
 		"$lookup": bson.M{
@@ -135,7 +135,47 @@ func (bs *BadgeCollectionServices) GetBadgeCollectionByUserId(c *gin.Context) {
 		return
 	}
 
-	responseMessage := "Successfully get a badge collection"
+	responseMessage := "Successfully get a badge collection by user id " + param
+
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(badge, responseMessage))
+}
+
+func (bs *BadgeCollectionServices) GetCurrentUserBadgeCollection(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := GetCurrentUser(c)
+
+	filter := bson.M{"uid": user.UID}
+
+	var lookupBadge = bson.M{
+		"$lookup": bson.M{
+			"from":         "badges",
+			"localField":   "badge_id",
+			"foreignField": "_id",
+			"as":           "badge",
+		},
+	}
+
+	var match = bson.M{"$match": filter}
+
+	var badge []model.BadgeCollection
+
+	cursor, err := GetBadgeCollectionCollection(bs).Aggregate(ctx, []bson.M{
+		lookupBadge,
+		match,
+	})
+	if err != nil {
+		print("ONE" + err.Error())
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if err = cursor.All(ctx, &badge); err != nil {
+		print("TWO" + err.Error())
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	responseMessage := "Successfully get a badge collection by user id " + user.UID
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(badge, responseMessage))
 }
@@ -148,13 +188,10 @@ func (bs *BadgeCollectionServices) CreateBadgeCollection(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-
-	if badge.UserID == primitive.NilObjectID {
-		c.JSON(http.StatusBadRequest, "User id is required")
-		return
-	}
+	user := GetCurrentUser(c)
 
 	badge.ID = primitive.NewObjectID()
+	badge.UserID = user.UID
 
 	result, err := GetBadgeCollectionCollection(bs).InsertOne(ctx, badge)
 	if err != nil {

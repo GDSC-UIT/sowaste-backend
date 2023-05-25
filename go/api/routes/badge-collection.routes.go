@@ -19,6 +19,7 @@ func BadgeCollectionRoutes(group *gin.RouterGroup, db *mongo.Client) {
 		badgeCollections.GET("", handler.GetBadgeCollections)
 		badgeCollections.GET("/:id", handler.GetABadgeCollection)
 		badgeCollections.GET("/user/:user_id", handler.GetBadgeCollectionsByUserId)
+		badgeCollections.GET("/user", handler.GetCurrentUserBadgeCollections)
 		badgeCollections.POST("", handler.CreateABadgeCollection)
 		badgeCollections.PUT("/:id", handler.UpdateABadgeCollection)
 		badgeCollections.DELETE("/:id", handler.DeleteABadgeCollection)

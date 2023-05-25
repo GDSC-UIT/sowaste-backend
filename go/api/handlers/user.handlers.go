@@ -17,6 +17,10 @@ func (uh *UserHandlers) GetAUser(c *gin.Context) {
 	uh.Handler.GetUser(c)
 }
 
+func (uh *UserHandlers) GetAUserById(c *gin.Context) {
+	uh.Handler.GetUserById(c)
+}
+
 func (uh *UserHandlers) CreateAUser(c *gin.Context) {
 	uh.Handler.CreateUser(c)
 }

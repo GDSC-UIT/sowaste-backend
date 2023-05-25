@@ -191,14 +191,52 @@ func (es *ExchangedServices) GetExchangedsByUserId(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(exchanged, responseMessage))
 }
 
+func (es *ExchangedServices) GetCurrentUserExchangeds(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := GetCurrentUser(c)
+
+	filter := bson.M{"uid": user.UID}
+
+	var exchanged []model.Exchanged
+
+	var lookupRewards = bson.M{
+		"$lookup": bson.M{
+			"from":         "rewards",
+			"localField":   "reward_id",
+			"foreignField": "_id",
+			"as":           "rewards",
+		},
+	}
+
+	var match = bson.M{
+		"$match": filter,
+	}
+
+	cursor, err := GetExchangedCollection(es).Aggregate(ctx, []bson.M{
+		lookupRewards,
+		match,
+	})
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err = cursor.All(ctx, &exchanged); err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	responseMessage := "Successfully get all exchanged by current user"
+
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(exchanged, responseMessage))
+}
+
 func (es *ExchangedServices) CreateAExchanged(c *gin.Context) {
 	ctx := c.Request.Context()
 	var exchanged model.Exchanged
 	if err := c.ShouldBindJSON(&exchanged); err != nil {
-		return
-	}
-	if exchanged.UserID == primitive.NilObjectID {
-		c.JSON(http.StatusBadRequest, "User id is required")
 		return
 	}
 	if exchanged.RewardID == primitive.NilObjectID {
@@ -206,6 +244,8 @@ func (es *ExchangedServices) CreateAExchanged(c *gin.Context) {
 		return
 	}
 	exchanged.ID = primitive.NewObjectID()
+	user := GetCurrentUser(c)
+	exchanged.UserID = user.UID
 	//** Insert a exchanged to the database **//
 	result, err := GetExchangedCollection(es).InsertOne(ctx, exchanged)
 	if err != nil {

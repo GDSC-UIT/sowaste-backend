@@ -19,6 +19,7 @@ func SavedRoutes(group *gin.RouterGroup, db *mongo.Client) {
 		saveds.GET("", handler.GetSaveds)
 		saveds.GET("/:id", handler.GetASaved)
 		saveds.GET("/user/:user_id", handler.GetSavedsByUserId)
+		saveds.GET("/user", handler.GetSavedsOfUser)
 		saveds.POST("", handler.CreateASaved)
 		saveds.PUT("/:id", handler.UpdateASaved)
 		saveds.DELETE("/:id", handler.DeleteASaved)
