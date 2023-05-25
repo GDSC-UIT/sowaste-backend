@@ -40,3 +40,7 @@ func (uh *UserHandlers) UpdateCurrentUserPoint(c *gin.Context) {
 func (uh *UserHandlers) UserExchangeReward(c *gin.Context) {
 	uh.Handler.CreateCurrentUserExchanges(c)
 }
+
+func (uh *UserHandlers) GetUserBadges(c *gin.Context) {
+	uh.Handler.GetCurrentUserBadges(c)
+}

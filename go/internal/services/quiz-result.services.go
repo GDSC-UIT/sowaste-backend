@@ -23,6 +23,7 @@ func GetQuizResultCollection(qs *QuizResultServices) *mongo.Collection {
 
 func (qs *QuizResultServices) GetQuizResults(c *gin.Context) {
 	ctx := c.Request.Context()
+	user := GetCurrentUser(c)
 	var quizResult []model.QuizResult
 
 	var lookupDictionaries = bson.M{
@@ -30,15 +31,7 @@ func (qs *QuizResultServices) GetQuizResults(c *gin.Context) {
 			"from":         "dictionaries",
 			"localField":   "dictionary_id",
 			"foreignField": "_id",
-			"as":           "dictionaries",
-		},
-	}
-	var lookupUser = bson.M{
-		"$lookup": bson.M{
-			"from":         "users",
-			"localField":   "uid",
-			"foreignField": "_id",
-			"as":           "user",
+			"as":           "dictionary",
 		},
 	}
 
@@ -57,11 +50,11 @@ func (qs *QuizResultServices) GetQuizResults(c *gin.Context) {
 			"dictionary_id": bson.M{
 				"$exists": true,
 			},
+			"uid": user.UID,
 		},
 	}
 
 	cursor, err := GetQuizResultCollection(qs).Aggregate(context.TODO(), []bson.M{
-		lookupUser,
 		lookupDictionaries,
 		projectDictionaries,
 		match,
@@ -215,19 +208,19 @@ func (qs *QuizResultServices) GetQuizResultsByUserId(c *gin.Context) {
 
 func (qs *QuizResultServices) CreateAQuizResult(c *gin.Context) {
 	ctx := c.Request.Context()
-	var quizResult model.QuizResult
-	if err := c.ShouldBindJSON(&quizResult); err != nil {
-		return
-	}
-	if quizResult.DictionaryID == primitive.NilObjectID {
+	dictionary_id := c.Query("dictionary_id")
+	if dictionary_id == "" {
 		c.JSON(http.StatusBadRequest, "Dictionary id is required")
 		return
 	}
+	var quizResult model.QuizResult
 
 	user := GetCurrentUser(c)
 
-	quizResult.UserID = user.UID
 	quizResult.ID = primitive.NewObjectID()
+	quizResult.UserID = user.UID
+	quizResult.DictionaryID, _ = primitive.ObjectIDFromHex(dictionary_id)
+	quizResult.Total = 0
 
 	result, err := GetQuizResultCollection(qs).InsertOne(ctx, quizResult)
 	if err != nil {
@@ -235,7 +228,7 @@ func (qs *QuizResultServices) CreateAQuizResult(c *gin.Context) {
 		return
 	}
 
-	responseMessage := "Successfully create a quiz result"
+	responseMessage := "Successfully create a quiz result for user id " + user.UID
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "quiz_result": quizResult}, responseMessage))
 }

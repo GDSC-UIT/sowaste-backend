@@ -182,16 +182,23 @@ func (bs *BadgeCollectionServices) GetCurrentUserBadgeCollection(c *gin.Context)
 
 func (bs *BadgeCollectionServices) CreateBadgeCollection(c *gin.Context) {
 	ctx := c.Request.Context()
-	var badge model.BadgeCollection
-
-	if err := c.ShouldBindJSON(&badge); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+	badgeId := c.Query("badge_id")
+	if badgeId == "" {
+		c.JSON(http.StatusBadRequest, "Please provide badge id")
 		return
 	}
+	var badge model.BadgeCollection
+
 	user := GetCurrentUser(c)
 
 	badge.ID = primitive.NewObjectID()
 	badge.UserID = user.UID
+	badgeObjectId, err := primitive.ObjectIDFromHex(badgeId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, nil)
+		return
+	}
+	badge.BadgeID = badgeObjectId
 
 	result, err := GetBadgeCollectionCollection(bs).InsertOne(ctx, badge)
 	if err != nil {
@@ -199,7 +206,7 @@ func (bs *BadgeCollectionServices) CreateBadgeCollection(c *gin.Context) {
 		return
 	}
 
-	responseMessage := "Successfully create a badge"
+	responseMessage := "Successfully create a badge collection for user " + user.UID
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "badge_collection": badge}, responseMessage))
 }

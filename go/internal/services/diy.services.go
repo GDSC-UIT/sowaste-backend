@@ -80,11 +80,6 @@ func (as *DIYServices) CreateDIY(c *gin.Context) {
 		return
 	}
 
-	if diy.DictionaryID == primitive.NilObjectID {
-		c.JSON(http.StatusBadRequest, "Dictionary ID is required")
-		return
-	}
-
 	diy.ID = primitive.NewObjectID()
 	diy.CreatedAt = utils.GetCurrentTime()
 

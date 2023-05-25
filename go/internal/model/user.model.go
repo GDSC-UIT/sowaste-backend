@@ -3,16 +3,16 @@ package model
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Credential struct {
-	AccessToken string `bson:"access_token,omitempty" json:"access_token,omitempty"`
-	Password    string `bson:"password,omitempty" json:"password,omitempty"`
+	AccessToken string `bson:"access_token" json:"access_token"`
+	Password    string `bson:"password" json:"password"`
 }
 
 type User struct {
 	ID           primitive.ObjectID `bson:"_id" json:"_id"`
-	UID          string             `bson:"uid,omitempty" json:"uid,omitempty"`
-	FullName     string             `bson:"full_name,omitempty" json:"full_name,omitempty"`
-	Email        string             `bson:"email,omitempty" json:"email,omitempty"` // primary key
-	Credential   Credential         `bson:"credential,omitempty" json:"credential,omitempty"`
-	RewardPoint  int                `bson:"reward_point,omitempty" json:"reward_point,omitempty"`
-	DisplayImage string             `bson:"display_image,omitempty" json:"display_image,omitempty"`
+	UID          string             `bson:"uid" json:"uid"`
+	FullName     string             `bson:"full_name" json:"full_name"`
+	Email        string             `bson:"email" json:"email"` // primary key
+	Credential   Credential         `bson:"credential" json:"credential"`
+	RewardPoint  int                `bson:"reward_point" json:"reward_point"`
+	DisplayImage string             `bson:"display_image" json:"display_image"`
 }

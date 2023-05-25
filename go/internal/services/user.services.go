@@ -260,7 +260,7 @@ func (us *UserServices) CreateCurrentUserExchanges(c *gin.Context) {
 
 	update := bson.M{"$set": user}
 
-	newUser, err := GetUserCollection(us).UpdateOne(ctx, filter, update)
+	_, err = GetUserCollection(us).UpdateOne(ctx, filter, update)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "Error while update user point")
@@ -278,8 +278,33 @@ func (us *UserServices) CreateCurrentUserExchanges(c *gin.Context) {
 
 	responseMessage := "Successfully create an exchange"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "exchange": exchange, "user": newUser}, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "exchange": exchange, "user": user}, responseMessage))
 
+}
+
+func (us *UserServices) GetCurrentUserBadges(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := GetCurrentUser(c)
+
+	filter := bson.M{"uid": user.UID}
+
+	var badges []model.BadgeCollection
+
+	cursor, err := utils.GetDatabaseCollection(utils.DbCollectionConstant.Badge_CollectionCollection, us.Db).Find(ctx, filter)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if err = cursor.All(ctx, &badges); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	responseMessage := "Successfully get all badges for user " + user.FullName
+
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(badges, responseMessage))
 }
 
 func GetCurrentUser(c *gin.Context) model.User {

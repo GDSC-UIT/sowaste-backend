@@ -4,10 +4,10 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Question struct {
 	ID           primitive.ObjectID `bson:"_id" json:"_id"`
-	Title        string             `bson:"title,omitempty" json:"title,omitempty"`
-	Description  string             `bson:"description,omitempty" json:"description,omitempty"`
+	Title        string             `bson:"title" json:"title"`
+	Description  string             `bson:"description" json:"description"`
 	DictionaryID primitive.ObjectID `bson:"dictionary_id" json:"dictionary_id"`
-	Dictionaries []Dictionary       `bson:"dictionaries,omitempty" json:"dictionaries,omitempty"`
-	Point        int64              `bson:"point,omitempty" json:"point,omitempty"`
-	Option       []Option           `bson:"options,omitempty" json:"options,omitempty"`
+	Dictionaries []Dictionary       `bson:"dictionaries" json:"dictionaries"`
+	Point        int64              `bson:"point" json:"point"`
+	Option       []Option           `bson:"options" json:"options"`
 }

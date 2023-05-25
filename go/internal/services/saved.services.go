@@ -169,15 +169,7 @@ func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
 			"from":         "dictionaries",
 			"localField":   "dictionary_id",
 			"foreignField": "_id",
-			"as":           "dictionaries",
-		},
-	}
-	var lookupUser = bson.M{
-		"$lookup": bson.M{
-			"from":         "users",
-			"localField":   "uid",
-			"foreignField": "_id",
-			"as":           "user",
+			"as":           "dictionary",
 		},
 	}
 	var project = bson.M{
@@ -194,7 +186,6 @@ func (ss *SavedServices) GetSavedsByUserId(c *gin.Context) {
 	}
 	cursor, err := GetSavedCollection(ss).Aggregate(ctx, []bson.M{
 		lookupDictionaries,
-		lookupUser,
 		project,
 		match,
 	})
@@ -222,7 +213,21 @@ func (ss *SavedServices) GetSavedsOfUser(c *gin.Context) {
 	var saved []model.Saved
 
 	filter := bson.M{"uid": user.UID}
-	cursor, err := GetSavedCollection(ss).Find(ctx, filter)
+	var lookupDictionaries = bson.M{
+		"$lookup": bson.M{
+			"from":         "dictionaries",
+			"localField":   "dictionary_id",
+			"foreignField": "_id",
+			"as":           "dictionary",
+		},
+	}
+	var match = bson.M{
+		"$match": filter,
+	}
+	cursor, err := GetSavedCollection(ss).Aggregate(ctx, []bson.M{
+		lookupDictionaries,
+		match,
+	})
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
@@ -294,20 +299,17 @@ func (ss *SavedServices) GetSavedsOfUser(c *gin.Context) {
 
 func (ss *SavedServices) CreateASaved(c *gin.Context) {
 	ctx := c.Request.Context()
-	var saved model.Saved
-	if err := c.ShouldBindJSON(&saved); err != nil {
-		return
-	}
-	if saved.DictionaryID == primitive.NilObjectID {
+	user := GetCurrentUser(c)
+	dictionary_id := c.Query("dictionary_id")
+	if dictionary_id == "" {
 		c.JSON(http.StatusBadRequest, "Dictionary id is required")
 		return
 	}
-	if saved.UserID == "" {
-		c.JSON(http.StatusBadRequest, "User id is required")
-		return
-	}
+	var saved model.Saved
 	saved.ID = primitive.NewObjectID()
-	//** Insert a saved to the database **//
+	saved.DictionaryID, _ = primitive.ObjectIDFromHex(dictionary_id)
+	saved.UserID = user.UID
+
 	result, err := GetSavedCollection(ss).InsertOne(ctx, saved)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)

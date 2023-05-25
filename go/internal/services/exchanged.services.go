@@ -30,35 +30,21 @@ func (es *ExchangedServices) GetExchangeds(c *gin.Context) {
 			"from":         "rewards",
 			"localField":   "reward_id",
 			"foreignField": "_id",
-			"as":           "rewards",
+			"as":           "reward",
 		},
 	}
 	var lookupUser = bson.M{
 		"$lookup": bson.M{
 			"from":         "users",
-			"localField":   "_id",
-			"foreignField": "user_id",
+			"localField":   "uid",
+			"foreignField": "uid",
 			"as":           "user",
-		},
-	}
-
-	var projectDictionaries = bson.M{
-		"$project": bson.M{},
-	}
-
-	var match = bson.M{
-		"$match": bson.M{
-			"dictionary_id": bson.M{
-				"$exists": true,
-			},
 		},
 	}
 
 	cursor, err := GetExchangedCollection(es).Aggregate(context.TODO(), []bson.M{
 		lookupUser,
 		lookupRewards,
-		projectDictionaries,
-		match,
 		// project,
 	})
 
@@ -204,7 +190,7 @@ func (es *ExchangedServices) GetCurrentUserExchangeds(c *gin.Context) {
 			"from":         "rewards",
 			"localField":   "reward_id",
 			"foreignField": "_id",
-			"as":           "rewards",
+			"as":           "reward",
 		},
 	}
 

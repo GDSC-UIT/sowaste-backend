@@ -23,10 +23,7 @@ func GetBadgeCollection(bs *BadgeServices) *mongo.Collection {
 func (bs *BadgeServices) GetBadges(c *gin.Context) {
 	ctx := c.Request.Context()
 	var badges []model.Badge
-	var projectBadges = bson.M{}
-	cursor, err := GetBadgeCollection(bs).Aggregate(context.TODO(), []bson.M{
-		projectBadges,
-	})
+	cursor, err := GetBadgeCollection(bs).Find(context.TODO(), bson.M{})
 
 	if err != nil {
 		panic(err)
