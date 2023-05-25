@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/database"
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
@@ -31,7 +32,7 @@ func (as *UserServices) GetUser(c *gin.Context) {
 
 	err := GetUserCollection(as).FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, utils.FailedResponse("User not found"))
 		return
 	}
 
@@ -166,6 +167,44 @@ func (as *UserServices) DeleteUser(c *gin.Context) {
 	responseMessage := "Successfully delete a user"
 
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(result, responseMessage))
+}
+
+func (us *UserServices) UpdateCurrentUserPoint(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := GetCurrentUser(c)
+	point := c.Query("point")
+	action := c.Query("action")
+	pointInt, err := strconv.Atoi(point)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if action == "decrease" {
+		if user.RewardPoint < pointInt {
+			c.JSON(http.StatusBadRequest, "Not enough point")
+			return
+		}
+		user.RewardPoint = user.RewardPoint - pointInt
+	} else if action == "increase" {
+		user.RewardPoint = user.RewardPoint + pointInt
+	}
+
+	filter := bson.M{"_id": user.ID}
+
+	update := bson.M{"$set": user}
+
+	result, err := GetUserCollection(us).UpdateOne(ctx, filter, update)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	responseMessage := "Successfully " + action + " point for user " + user.FullName
+
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "user": user}, responseMessage))
 }
 
 func GetCurrentUser(c *gin.Context) model.User {

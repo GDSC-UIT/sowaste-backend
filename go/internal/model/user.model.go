@@ -13,6 +13,6 @@ type User struct {
 	FullName     string             `bson:"full_name,omitempty" json:"full_name,omitempty"`
 	Email        string             `bson:"email,omitempty" json:"email,omitempty"` // primary key
 	Credential   Credential         `bson:"credential,omitempty" json:"credential,omitempty"`
-	RewardPoint  int64              `bson:"reward_point,omitempty" json:"reward_point,omitempty"`
+	RewardPoint  int                `bson:"reward_point,omitempty" json:"reward_point,omitempty"`
 	DisplayImage string             `bson:"display_image,omitempty" json:"display_image,omitempty"`
 }
