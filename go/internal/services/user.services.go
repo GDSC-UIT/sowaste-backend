@@ -84,8 +84,10 @@ func (as *UserServices) CreateUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	claims := c.MustGet("CLAIMS").(utils.UserClaims)
 	uid := c.Query("uid")
-	fmt.Println(uid)
-	c.Set("UUID", uid)
+	if uid == "" {
+		c.JSON(http.StatusBadRequest, "uid is required")
+		return
+	}
 	if !as.CheckIfUserNotExists(c) {
 		c.JSON(http.StatusOK, "User already exists and can log in")
 		return
