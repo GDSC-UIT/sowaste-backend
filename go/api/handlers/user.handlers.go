@@ -36,3 +36,7 @@ func (uh *UserHandlers) DeleteAUser(c *gin.Context) {
 func (uh *UserHandlers) UpdateCurrentUserPoint(c *gin.Context) {
 	uh.Handler.UpdateCurrentUserPoint(c)
 }
+
+func (uh *UserHandlers) UserExchangeReward(c *gin.Context) {
+	uh.Handler.CreateCurrentUserExchanges(c)
+}
