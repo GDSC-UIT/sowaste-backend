@@ -208,19 +208,23 @@ func (qs *QuizResultServices) GetQuizResultsByUserId(c *gin.Context) {
 
 func (qs *QuizResultServices) CreateAQuizResult(c *gin.Context) {
 	ctx := c.Request.Context()
-	dictionary_id := c.Query("dictionary_id")
-	if dictionary_id == "" {
-		c.JSON(http.StatusBadRequest, "Dictionary id is required")
-		return
-	}
+
 	var quizResult model.QuizResult
 
 	user := GetCurrentUser(c)
 
+	if err := c.ShouldBindJSON(&quizResult); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if quizResult.DictionaryID == primitive.NilObjectID {
+		c.JSON(http.StatusBadRequest, "Dictionary id is required")
+		return
+	}
+
 	quizResult.ID = primitive.NewObjectID()
 	quizResult.UserID = user.UID
-	quizResult.DictionaryID, _ = primitive.ObjectIDFromHex(dictionary_id)
-	quizResult.Total = 0
 
 	result, err := GetQuizResultCollection(qs).InsertOne(ctx, quizResult)
 	if err != nil {
