@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -31,6 +32,10 @@ func Cors(c *gin.Context) {
 	c.Header("Access-Control-Max-Age", "86400")
 	c.Header("Access-Control-Request-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	c.Header("Access-Control-Request-Method", "GET, POST, PUT, DELETE, OPTIONS")
+	if c.Request.Method == "OPTIONS" {
+		c.AbortWithStatus(204)
+		return
+	}
 	c.Next()
 }
 
@@ -38,7 +43,9 @@ func Cors(c *gin.Context) {
 
 func AuthMiddleware(c *gin.Context) {
 	authorizationToken := c.GetHeader("Authorization")
+	fmt.Println(c.Request.Header)
 	idToken := strings.TrimSpace(strings.Replace(authorizationToken, "Bearer", "", 1))
+	fmt.Println(idToken)
 	if idToken == "" {
 		c.JSON(http.StatusUnauthorized, utils.FailedResponse("Unauthorized"))
 		c.Abort()

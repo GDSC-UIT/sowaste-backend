@@ -21,7 +21,7 @@ func Init() {
 }
 
 func (gr *GinRouter) RoutersEstablishment() {
-	Router.Current.Use(transport.Recover(database.Client)).Use(transport.Cors).Use(transport.AuthMiddleware)
+	Router.Current.Use(transport.Cors).Use(transport.AuthMiddleware).Use(transport.Recover(database.Client))
 	apiRouter := Router.Current.Group("/api")
 
 	/*
