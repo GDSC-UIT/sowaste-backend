@@ -15,4 +15,5 @@ var DbCollectionConstant = DbCollectionConstants{
 	QuestionResultCollection:   "question_results",
 	QuizResultCollection:       "quiz_results",
 	ExchangedCollection:        "exchanged",
+	QRCollection:               "qrs",
 }

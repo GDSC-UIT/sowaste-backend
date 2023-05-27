@@ -54,6 +54,7 @@ func (gr *GinRouter) RoutersEstablishment() {
 	routes.DIYRoutes(apiRouter, database.Client.Source)
 	routes.UserRoutes(apiRouter, database.Client.Source)
 	routes.RewardRoutes(apiRouter, database.Client.Source)
+	routes.QRRoutes(apiRouter, database.Client.Source)
 }
 
 func (gr *GinRouter) Run() {

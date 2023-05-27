@@ -20,6 +20,7 @@ type DbCollectionConstants struct {
 	QuestionResultCollection   string
 	QuizResultCollection       string
 	ExchangedCollection        string
+	QRCollection               string
 }
 
 type UserClaims struct {
