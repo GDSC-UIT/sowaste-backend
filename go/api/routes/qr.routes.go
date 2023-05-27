@@ -21,7 +21,7 @@ func QRRoutes(group *gin.RouterGroup, db *mongo.Client) {
 		qrs.POST("", handler.CreateAQR)
 		qrs.PUT("/:id", handler.UpdateAQR)
 		qrs.DELETE("/:id", handler.DeleteAQR)
-		qrs.POST("/scan", handler.ScanQR)
+		qrs.POST("/scan/:id", handler.ScanQR)
 		qrs.GET("/generate", handler.GenerateQRCode)
 	}
 }

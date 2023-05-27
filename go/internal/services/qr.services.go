@@ -104,6 +104,29 @@ func (qrs *QRServices) CreateQR(c *gin.Context) {
 
 func (qrs *QRServices) GenerateQRCode(c *gin.Context) {
 	param := c.Query("id")
+	if param == "" {
+		c.JSON(http.StatusBadRequest, utils.FailedResponse("Missing id parameter"))
+		return
+	}
+
+	var QR model.QR
+
+	id, err := primitive.ObjectIDFromHex(param)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.FailedResponse("Invalid id parameter"))
+		return
+	}
+
+	filter := bson.M{"_id": id}
+
+	err = GetQRCollection(qrs).FindOne(c.Request.Context(), filter).Decode(&QR)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.FailedResponse("QR not found"))
+		return
+	}
+
 	response, err := http.Get("https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=" + param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, utils.FailedResponse("Error while generating QR code"))
@@ -123,6 +146,11 @@ func (qrs *QRServices) GenerateQRCode(c *gin.Context) {
 func (qrs *QRServices) ScanQR(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")
+
+	if param == "" {
+		c.JSON(http.StatusBadRequest, utils.FailedResponse("Missing id parameter"))
+		return
+	}
 
 	user := GetCurrentUser(c)
 	uid := user.UID
