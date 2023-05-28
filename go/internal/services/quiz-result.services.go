@@ -256,7 +256,14 @@ func (qs *QuizResultServices) UpdateAQuizResult(c *gin.Context) {
 		return
 	}
 
+	currentQuizResultTotal := quizResult.Total
+
 	if err := c.ShouldBindJSON(&quizResult); err != nil {
+		return
+	}
+
+	if quizResult.Total <= currentQuizResultTotal {
+		c.JSON(http.StatusBadRequest, "Total must be greater than current total")
 		return
 	}
 

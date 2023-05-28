@@ -43,7 +43,6 @@ func Cors(c *gin.Context) {
 
 func AuthMiddleware(c *gin.Context) {
 	authorizationToken := c.GetHeader("Authorization")
-	fmt.Println(c.Request.Header)
 	idToken := strings.TrimSpace(strings.Replace(authorizationToken, "Bearer", "", 1))
 	fmt.Println(idToken)
 	if idToken == "" {

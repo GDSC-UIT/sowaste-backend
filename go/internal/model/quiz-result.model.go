@@ -8,5 +8,4 @@ type QuizResult struct {
 	DictionaryID primitive.ObjectID `bson:"dictionary_id" json:"dictionary_id"`
 	UserID       string             `bson:"uid" json:"uid"`
 	Dictionary   []Dictionary       `bson:"dictionary" json:"dictionary"`
-	IsDone       bool               `bson:"is_done" json:"is_done"`
 }
