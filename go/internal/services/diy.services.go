@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
@@ -27,9 +26,28 @@ func (as *DIYServices) GetDIYs(c *gin.Context) {
 	var projectDIYs = bson.M{
 		"$project": bson.M{
 			"description": 0,
+			"source":      0,
+			"dictionary": bson.M{
+				"short_description":    0,
+				"types":                0,
+				"good_to_know":         0,
+				"how_to_recyclable":    0,
+				"recyclable_items":     0,
+				"non_recyclable_items": 0,
+				"recyable":             0,
+			},
+		},
+	}
+	var lookupDictionary = bson.M{
+		"$lookup": bson.M{
+			"from":         "dictionaries",
+			"localField":   "dictionary_id",
+			"foreignField": "_id",
+			"as":           "dictionary",
 		},
 	}
 	cursor, err := GetDIYCollection(as).Aggregate(context.TODO(), []bson.M{
+		lookupDictionary,
 		projectDIYs,
 	})
 
@@ -68,31 +86,41 @@ func (as *DIYServices) GetAnDIY(c *gin.Context) {
 		},
 	}
 
+	var project = bson.M{
+		"$project": bson.M{
+			"dictionary_id": 1,
+			"dictionary": bson.M{
+				"_id":           1,
+				"name":          1,
+				"display_image": 1,
+			},
+		},
+	}
+
 	var match = bson.M{
 		"$match": filter,
 	}
 
-	var diy model.DIY
+	var diy []model.DIY
 
 	cursor, err := GetDIYCollection(as).Aggregate(ctx, []bson.M{
 		lookupDictionary,
+		project,
 		match,
 	})
 	if err != nil {
-		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	if err = cursor.All(ctx, &diy); err != nil {
-		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	responseMessage := "Successfully get an diy"
+	responseMessage := "Successfully get a diy"
 
-	c.JSON(http.StatusOK, utils.SuccessfulResponse(diy, responseMessage))
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"diy": diy[0]}, responseMessage))
 }
 
 func (as *DIYServices) CreateDIY(c *gin.Context) {
