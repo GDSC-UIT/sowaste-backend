@@ -83,25 +83,14 @@ func (es *ExchangedServices) GetAnExchanged(c *gin.Context) {
 			"from":         "rewards",
 			"localField":   "reward_id",
 			"foreignField": "_id",
-			"as":           "rewards",
+			"as":           "reward",
 		},
 	}
-	var lookupUser = bson.M{
-		"$lookup": bson.M{
-			"from":         "users",
-			"localField":   "_id",
-			"foreignField": "user_id",
-			"as":           "user",
-		},
-	}
-	var project = bson.M{}
 	var match = bson.M{
 		"$match": filter,
 	}
 	cursor, err := GetExchangedCollection(es).Aggregate(ctx, []bson.M{
 		lookupRewards,
-		lookupUser,
-		project,
 		match,
 	})
 

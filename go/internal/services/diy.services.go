@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/GDSC-UIT/sowaste-backend/go/internal/model"
@@ -58,10 +59,33 @@ func (as *DIYServices) GetAnDIY(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
+	var lookupDictionary = bson.M{
+		"$lookup": bson.M{
+			"from":         "dictionaries",
+			"localField":   "dictionary_id",
+			"foreignField": "_id",
+			"as":           "dictionary",
+		},
+	}
+
+	var match = bson.M{
+		"$match": filter,
+	}
+
 	var diy model.DIY
 
-	err = GetDIYCollection(as).FindOne(ctx, filter).Decode(&diy)
+	cursor, err := GetDIYCollection(as).Aggregate(ctx, []bson.M{
+		lookupDictionary,
+		match,
+	})
 	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if err = cursor.All(ctx, &diy); err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -77,6 +101,11 @@ func (as *DIYServices) CreateDIY(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&diy); err != nil {
 		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if diy.DictionaryID == primitive.NilObjectID {
+		c.JSON(http.StatusBadRequest, "DictionaryID is required")
 		return
 	}
 

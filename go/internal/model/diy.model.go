@@ -10,4 +10,6 @@ type DIY struct {
 	Source           string             `bson:"source,omitempty" json:"source,omitempty"`
 	CreatedAt        primitive.DateTime `bson:"created_at,omitempty" json:"created_at,omitempty"`
 	DisplayImage     string             `bson:"display_image,omitempty" json:"display_image,omitempty"`
+	DictionaryID     primitive.ObjectID `bson:"dictionary_id" json:"dictionary_id"`
+	Dictionary       []Dictionary       `bson:"dictionary,omitempty" json:"dictionary,omitempty"`
 }

@@ -152,9 +152,6 @@ func (qrs *QRServices) ScanQR(c *gin.Context) {
 		return
 	}
 
-	user := GetCurrentUser(c)
-	uid := user.UID
-
 	id, err := primitive.ObjectIDFromHex(param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, nil)
@@ -170,9 +167,17 @@ func (qrs *QRServices) ScanQR(c *gin.Context) {
 		return
 	}
 
+	if QR.ExpireAt.Time().Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, utils.FailedResponse("QR code expired"))
+		return
+	}
+
 	if QR.UserIDs == nil {
 		QR.UserIDs = []string{}
 	}
+
+	user := GetCurrentUser(c)
+	uid := user.UID
 
 	if utils.ContainsElement(QR.UserIDs, uid) {
 		c.JSON(http.StatusBadRequest, utils.FailedResponse("User already scanned this QR"))
@@ -203,8 +208,6 @@ func (qrs *QRServices) ScanQR(c *gin.Context) {
 
 		c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "QR": QR}, responseMessage))
 	}
-
-	c.JSON(http.StatusInternalServerError, utils.FailedResponse("Something went wrong"))
 
 }
 
