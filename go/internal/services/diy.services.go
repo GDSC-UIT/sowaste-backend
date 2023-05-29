@@ -77,23 +77,25 @@ func (as *DIYServices) GetAnDIY(c *gin.Context) {
 
 	filter := bson.M{"_id": id}
 
+	var projectDIYs = bson.M{
+		"$project": bson.M{
+			"dictionary": bson.M{
+				"short_description":    0,
+				"types":                0,
+				"good_to_know":         0,
+				"how_to_recyclable":    0,
+				"recyclable_items":     0,
+				"non_recyclable_items": 0,
+				"recyable":             0,
+			},
+		},
+	}
 	var lookupDictionary = bson.M{
 		"$lookup": bson.M{
 			"from":         "dictionaries",
 			"localField":   "dictionary_id",
 			"foreignField": "_id",
 			"as":           "dictionary",
-		},
-	}
-
-	var project = bson.M{
-		"$project": bson.M{
-			"dictionary_id": 1,
-			"dictionary": bson.M{
-				"_id":           1,
-				"name":          1,
-				"display_image": 1,
-			},
 		},
 	}
 
@@ -105,7 +107,7 @@ func (as *DIYServices) GetAnDIY(c *gin.Context) {
 
 	cursor, err := GetDIYCollection(as).Aggregate(ctx, []bson.M{
 		lookupDictionary,
-		project,
+		projectDIYs,
 		match,
 	})
 	if err != nil {
