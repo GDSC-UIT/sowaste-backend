@@ -45,7 +45,6 @@ func (gr *GinRouter) RoutersEstablishment() {
 	routes.QuizRoutes(apiRouter, database.Client.Source)
 	routes.QuestionRoutes(apiRouter, database.Client.Source)
 	routes.ArticleRoutes(apiRouter, database.Client.Source)
-	routes.CategoryRoutes(apiRouter, database.Client.Source)
 	routes.SavedRoutes(apiRouter, database.Client.Source)
 	routes.ExchangedRoutes(apiRouter, database.Client.Source)
 	routes.QuizResultRoutes(apiRouter, database.Client.Source)

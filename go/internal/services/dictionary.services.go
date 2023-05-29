@@ -35,20 +35,18 @@ func (ds *DictionaryServices) GetDictionaries(c *gin.Context) {
 	// 	"foreignField": "dictionary_id", //** field in the documents of the "from" collection **//
 	// 	"as":           "questions",     //** output array field **//
 	// }}
-	// var projectQuizzes = bson.M{"$project": bson.M{
-	// 	"questions": bson.M{
-	// 		"options": 0,
-	// 	},
-	// 	"description": 0,
-	// }}
-	var projectDictionaries = bson.M{"$project": bson.M{
-		"description": 0,
+	var project = bson.M{"$project": bson.M{
+		"is_orgainc":           0,
+		"recyable":             0,
+		"types":                0,
+		"short_description":    0,
+		"good_to_know":         0,
+		"recyclable_items":     0,
+		"non_recyclable_items": 0,
 	}}
 
 	cursor, err := GetDictionaryCollection(ds).Aggregate(context.TODO(), []bson.M{
-		projectDictionaries,
-		// lookupQuizzes,
-		// projectQuizzes,
+		project,
 	})
 
 	if err != nil {
@@ -156,8 +154,6 @@ func (ds *DictionaryServices) UpdateADictionary(c *gin.Context) {
 	if err := c.ShouldBindJSON(&dictionary); err != nil {
 		return
 	}
-
-	fmt.Println(dictionary)
 
 	update := bson.M{"$set": dictionary}
 
