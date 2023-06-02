@@ -233,6 +233,68 @@ func (es *ExchangedServices) CreateAExchanged(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"result": result, "exchanged": exchanged}, responseMessage))
 }
 
+func (es *ExchangedServices) RefundAExchanged(c *gin.Context) {
+	ctx := c.Request.Context()
+	param := c.Param("id")
+	id, err := primitive.ObjectIDFromHex(param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, nil)
+		return
+	}
+
+	filter := bson.M{"_id": id}
+	user := GetCurrentUser(c)
+
+	var exchanged model.Exchanged
+
+	err = GetExchangedCollection(es).FindOne(ctx, filter).Decode(&exchanged)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if exchanged.UserID != user.UID {
+		c.JSON(http.StatusBadRequest, "You can not refund this exchanged")
+		return
+	}
+
+	// delete the exchange
+	_, err = GetExchangedCollection(es).DeleteOne(ctx, filter)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	var reward model.Reward
+
+	err = utils.GetDatabaseCollection(utils.DbCollectionConstant.RewardCollection, es.Db).FindOne(ctx, bson.M{"_id": exchanged.RewardID}).Decode(&reward)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	// refund the point for user
+
+	user.RewardPoint += reward.Point
+
+	_, err = utils.GetDatabaseCollection(utils.DbCollectionConstant.UserCollection, es.Db).UpdateOne(ctx, bson.M{"uid": user.UID}, bson.M{"$set": user})
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	// update the reward
+
+	responseMessage := "Successfully refund an exchange"
+
+	c.JSON(http.StatusOK, utils.SuccessfulResponse(bson.M{"user": user}, responseMessage))
+
+}
+
 func (es *ExchangedServices) UpdateAExchanged(c *gin.Context) {
 	ctx := c.Request.Context()
 	param := c.Param("id")

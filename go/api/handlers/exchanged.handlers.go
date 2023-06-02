@@ -36,3 +36,7 @@ func (eh *ExchangedHandlers) UpdateAExchange(c *gin.Context) {
 func (eh *ExchangedHandlers) DeleteAExchange(c *gin.Context) {
 	eh.Handler.DeleteAExchanged(c)
 }
+
+func (eh *ExchangedHandlers) RefundAExchange(c *gin.Context) {
+	eh.Handler.RefundAExchanged(c)
+}
