@@ -43,6 +43,7 @@ func (ds *DictionaryServices) GetDictionaries(c *gin.Context) {
 		"good_to_know":         0,
 		"recyclable_items":     0,
 		"non_recyclable_items": 0,
+		"how_to_recyclable":    0,
 	}}
 
 	cursor, err := GetDictionaryCollection(ds).Aggregate(context.TODO(), []bson.M{
