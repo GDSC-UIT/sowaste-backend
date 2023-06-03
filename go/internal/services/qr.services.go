@@ -79,7 +79,7 @@ func (qrs *QRServices) CreateQR(c *gin.Context) {
 	QR.ID = primitive.NewObjectID()
 	QR.UserIDs = []string{}
 	QR.IssuedAt = primitive.NewDateTimeFromTime(time.Now())
-	QR.ExpireAt = primitive.NewDateTimeFromTime(time.Now().Add(time.Minute * 5)) // 5 minutes
+	QR.ExpireAt = primitive.NewDateTimeFromTime(time.Now().Add(time.Minute * 60)) // 5 minutes
 	_, err := GetQRCollection(qrs).InsertOne(ctx, QR)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
